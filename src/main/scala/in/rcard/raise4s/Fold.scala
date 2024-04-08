@@ -1,3 +1,5 @@
+package in.rcard.raise4s
+
 import scala.util.control.{ControlThrowable, NoStackTrace}
 
 private class DefaultRaise extends Raise[Any]:
