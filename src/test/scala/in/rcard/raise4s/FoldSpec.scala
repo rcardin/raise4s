@@ -7,8 +7,8 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
   trait Error
   case object MyError extends Error
-  
-  "The fold function" should "transform the result of the given Raise function" in {
+
+  "The fold function with four parameters" should "transform the result of the given Raise function" in {
     val actual: String = fold(
       () => 42,
       throwable => "Error: " + throwable.getMessage,
@@ -18,7 +18,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
     actual shouldBe "Value: 42"
   }
-  
+
   it should "transform the result of the given Raise function when it throws an exception" in {
     val actual: String = fold(
       () => throw new RuntimeException("Boom!"),
@@ -29,15 +29,45 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
     actual shouldBe "Error: Boom!"
   }
-  
-    it should "transform the result of the given Raise function when it returns an error" in {
-        val actual: String = fold(
-        () => raise(MyError),
-        throwable => "Error: " + throwable.getMessage,
+
+  it should "transform the result of the given Raise function when it returns an error" in {
+    val actual: String = fold(
+      () => raise(MyError),
+      throwable => "Error: " + throwable.getMessage,
+      error => "Error: " + error,
+      value => "Value: " + value
+    )
+
+    actual shouldBe "Error: MyError"
+  }
+
+  "The fold function without the 'catch' block " should "transform the result of the given Raise function" in {
+    val actual: String = fold(
+      () => 42,
+      error => "Error: " + error,
+      value => "Value: " + value
+    )
+
+    actual shouldBe "Value: 42"
+  }
+
+  it should "transform the result of the given Raise function when it returns an error" in {
+    val actual: String = fold(
+      () => raise(MyError),
+      error => "Error: " + error,
+      value => "Value: " + value
+    )
+
+    actual shouldBe "Error: MyError"
+  }
+
+  it should "rethrows any exception" in {
+    assertThrows[RuntimeException] {
+      fold(
+        () => throw new RuntimeException("Boom!"),
         error => "Error: " + error,
         value => "Value: " + value
-        )
-    
-        actual shouldBe "Error: MyError"
+      )
     }
+  }
 }

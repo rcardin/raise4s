@@ -19,3 +19,10 @@ def fold[A, B, Error](
     case e: Raised[Error] => recover(e.original)
     case e: Throwable     => catchBlock(e)
 end fold
+
+//noinspection NoTailRecursionAnnotation
+def fold[A, B, Error](
+    block: Raise[Error] ?=> () => A,
+    recover: (error: Error) => B,
+    transform: (value: A) => B
+): B = fold(block, ex => throw ex, recover, transform)
