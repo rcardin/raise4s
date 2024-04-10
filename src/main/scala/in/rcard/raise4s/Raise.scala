@@ -52,5 +52,5 @@ def $catch[A](block: () => A, catchBlock: Throwable => A): A =
 def withError[Error, OtherError, A](
     transform: OtherError => Error,
     block: Raise[OtherError] ?=> () => A
-)(using r: Raise[Error]) =
+)(using r: Raise[Error]): A =
   recover(block, otherError => r.raise(transform(otherError)))

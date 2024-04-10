@@ -124,4 +124,20 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
       )
     }
   }
+
+  "withError" should "return the value if it is not an error" in {
+    val actual = either {
+      () => withError[Int, String, Int](s => s.length, () => 42)
+    }
+
+    actual should be(Right(42))
+  }
+
+  it should "return the transformed error if the value is an error" in {
+    val actual = either {
+      () => withError[Int, String, Int](s => s.length, () => raise("error"))
+    }
+
+    actual should be(Left(5))
+  }
 }
