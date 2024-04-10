@@ -27,7 +27,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     val actual: Int = fold(
       () => ensureNotNull(42, () => "error"),
       error => 43,
-      value => value
+      identity
     )
     actual should be(42)
   }

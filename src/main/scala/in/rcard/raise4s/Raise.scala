@@ -13,3 +13,23 @@ def ensure[Error](condition: Boolean, raise: () => Error)(using r: Raise[Error])
 def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error]): B =
   if value == null then r.raise(raise())
   else value
+
+/** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type [Error],
+  * and recover by providing a transform `Error` into a fallback value of type `A`. <p>
+  * {{{
+  * TODO
+  * }}}
+  *
+  * @param block
+  *   The block to execute
+  * @param recover
+  *   The function to transform the error into a fallback value
+  * @tparam Error
+  *   The type of the error that can be raised and recovered
+  * @tparam A
+  *   The type of the result of the block
+  * @return
+  *   The result of the block or the fallback value
+  */
+def recover[Error, A](block: Raise[Error] ?=> () => A)(recover: Error => A): A =
+  fold(block, ex => throw ex, recover, identity)
