@@ -97,4 +97,22 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
     actual should be(44)
   }
+
+  "$catch" should "return the value if no exception is thrown" in {
+    val actual = $catch(
+      () => 42,
+      ex => 43
+    )
+
+    actual should be(42)
+  }
+
+  it should "return the recovery value if an exception is thrown" in {
+    val actual = $catch(
+      () => throw new RuntimeException("error"),
+      ex => 43
+    )
+
+    actual should be(43)
+  }
 }

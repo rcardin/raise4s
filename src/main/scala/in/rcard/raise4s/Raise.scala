@@ -34,5 +34,13 @@ def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error])
 def recover[Error, A](block: Raise[Error] ?=> () => A, recover: Error => A): A =
   fold(block, ex => throw ex, recover, identity)
 
-def recover[Error, A](block: Raise[Error] ?=> () => A, recover: Error => A, catchBlock: Throwable => A): A =
+def recover[Error, A](
+    block: Raise[Error] ?=> () => A,
+    recover: Error => A,
+    catchBlock: Throwable => A
+): A =
   fold(block, catchBlock, recover, identity)
+
+def $catch[A](block: () => A, catchBlock: Throwable => A): A =
+  try block()
+  catch case ex: Throwable => catchBlock(ex)
