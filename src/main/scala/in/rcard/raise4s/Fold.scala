@@ -1,6 +1,6 @@
 package in.rcard.raise4s
 
-import scala.util.control.{ControlThrowable, NoStackTrace}
+import scala.util.control.{ControlThrowable, NoStackTrace, NonFatal}
 
 private class DefaultRaise extends Raise[Any]:
   def raise(e: Any): Nothing = throw Raised(e)
@@ -17,7 +17,8 @@ def fold[A, B, Error](
   try transform(block())
   catch
     case e: Raised[Error] => recover(e.original)
-    case e: Throwable     => catchBlock(e)
+    case NonFatal(e)      => catchBlock(e)
+    case e: Throwable     => throw e
 end fold
 
 //noinspection NoTailRecursionAnnotation

@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import scala.util.control.NonFatal
+
 trait Raise[-Error]:
   def raise(e: Error): Nothing
 
@@ -43,4 +45,6 @@ def recover[Error, A](
 
 def $catch[A](block: () => A, catchBlock: Throwable => A): A =
   try block()
-  catch case ex: Throwable => catchBlock(ex)
+  catch
+    case NonFatal(e) => catchBlock(e)
+    case ex          => throw ex

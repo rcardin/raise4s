@@ -115,4 +115,13 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
     actual should be(43)
   }
+
+  it should "rethrow any fatal exception" in {
+    assertThrows[OutOfMemoryError] {
+      $catch(
+        () => throw new OutOfMemoryError("error"),
+        ex => 43
+      )
+    }
+  }
 }

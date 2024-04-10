@@ -41,6 +41,17 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     actual shouldBe "Error: MyError"
   }
 
+  it should "rethrows any fatal exception" in {
+    assertThrows[OutOfMemoryError] {
+      fold(
+        () => throw new OutOfMemoryError("Boom!"),
+        throwable => "Error: " + throwable.getMessage,
+        error => "Error: " + error,
+        value => "Value: " + value
+      )
+    }
+  }
+
   "The fold function without the 'catch' block " should "transform the result of the given Raise function" in {
     val actual: String = fold(
       () => 42,
