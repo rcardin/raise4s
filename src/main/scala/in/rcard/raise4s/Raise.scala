@@ -31,5 +31,5 @@ def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error])
   * @return
   *   The result of the block or the fallback value
   */
-def recover[Error, A](block: Raise[Error] ?=> () => A)(recover: Error => A): A =
+def recover[Error, A](block: Raise[Error] ?=> () => A, recover: Error => A): A =
   fold(block, ex => throw ex, recover, identity)

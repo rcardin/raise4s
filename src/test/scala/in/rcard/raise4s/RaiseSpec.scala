@@ -40,4 +40,31 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     )
     actual should be(43)
   }
+
+  "recover" should "return the value if it is not an error" in {
+    val actual = recover(
+      () => 42,
+      error => 43
+    )
+
+    actual should be(42)
+  }
+
+  it should "return the recovery value if the value is an error" in {
+    val actual = recover(
+      () => raise("error"),
+      error => 43
+    )
+
+    actual should be(43)
+  }
+
+  it should "rethrow the exception" in {
+    assertThrows[RuntimeException] {
+      recover(
+        () => throw new RuntimeException("error"),
+        error => 43
+      )
+    }
+  }
 }
