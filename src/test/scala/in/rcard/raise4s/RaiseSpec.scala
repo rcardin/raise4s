@@ -67,4 +67,34 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
       )
     }
   }
+
+  "recover with catchBlock" should "return the value if it is not an error" in {
+    val actual = recover(
+      () => 42,
+      error => 43,
+      ex => 44
+    )
+
+    actual should be(42)
+  }
+
+  it should "return the recovery value if the value is an error" in {
+    val actual = recover(
+      () => raise("error"),
+      error => 43,
+      ex => 44
+    )
+
+    actual should be(43)
+  }
+
+  it should "return the recovery value if the value is an exception" in {
+    val actual = recover(
+      () => throw new RuntimeException("error"),
+      error => 43,
+      ex => 44
+    )
+
+    actual should be(44)
+  }
 }
