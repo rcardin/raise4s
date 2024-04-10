@@ -48,3 +48,9 @@ def $catch[A](block: () => A, catchBlock: Throwable => A): A =
   catch
     case NonFatal(e) => catchBlock(e)
     case ex          => throw ex
+
+def withError[Error, OtherError, A](
+    transform: OtherError => Error,
+    block: Raise[OtherError] ?=> () => A
+)(using r: Raise[Error]) =
+  recover(block, otherError => r.raise(transform(otherError)))
