@@ -18,18 +18,19 @@ package in.rcard.raise4s
 def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
   fold(block, error => Left(error), value => Right(value))
 
-class OptionRaise(val raise: Raise[None]) extends Raise[None]
+class OptionRaise(val raise: Raise[Option[Nothing]]) extends Raise[Option[Nothing]]:
+  override def raise(error: Option[Nothing]): Nothing = raise.raise(error)
 
-extension [A](option: Option[A])
-  def bind(): A =
-    option.getOrElse(raise(None))
+object OptionPredef:
+  extension [A](option: Option[A])(using optionRaise: OptionRaise)
+    def bind(): A = option.getOrElse(raise(None))
 
 def option[A](block: OptionRaise ?=> A): Option[A] =
   fold(
     {
-      given optionRaise: OptionRaise = new OptionRaise(this)
-      block(optionRaise)
+      given optionRaise: OptionRaise = new OptionRaise(new DefaultRaise())
+      block(using optionRaise)
     },
-    identity,
+    _ => None,
     Some(_)
   )

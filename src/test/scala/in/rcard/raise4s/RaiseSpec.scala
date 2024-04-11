@@ -140,4 +140,5 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
     actual should be(Left(5))
   }
+
 }

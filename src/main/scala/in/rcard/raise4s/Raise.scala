@@ -55,7 +55,8 @@ def withError[Error, OtherError, A](
 )(using r: Raise[Error]): A =
   recover(block, otherError => r.raise(transform(otherError)))
 
-extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
-  def bind(): A = either match
-    case Right(a) => a
-    case Left(e)  => r.raise(e)
+object EitherPredef:
+  extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
+    def bind(): A = either match
+      case Right(a) => a
+      case Left(e)  => r.raise(e)
