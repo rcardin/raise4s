@@ -11,5 +11,5 @@ package in.rcard.raise4s
   * @tparam Error The type of the logical error that can be raised by the computation
   * @return An [[Either]] representing the outcome of the computation
   */
-def either[A, Error](block: Raise[Error] ?=> () => A): Either[Error, A] =
+def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
   fold(block, error => Left(error), value => Right(value))

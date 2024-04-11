@@ -33,11 +33,11 @@ def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error])
   * @return
   *   The result of the block or the fallback value
   */
-def recover[Error, A](block: Raise[Error] ?=> () => A, recover: Error => A): A =
+def recover[Error, A](block: Raise[Error] ?=> A, recover: Error => A): A =
   fold(block, ex => throw ex, recover, identity)
 
 def recover[Error, A](
-    block: Raise[Error] ?=> () => A,
+    block: Raise[Error] ?=> A,
     recover: Error => A,
     catchBlock: Throwable => A
 ): A =
@@ -51,6 +51,11 @@ def $catch[A](block: () => A, catchBlock: Throwable => A): A =
 
 def withError[Error, OtherError, A](
     transform: OtherError => Error,
-    block: Raise[OtherError] ?=> () => A
+    block: Raise[OtherError] ?=> A
 )(using r: Raise[Error]): A =
   recover(block, otherError => r.raise(transform(otherError)))
+
+extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
+  def bind(): A = either match
+    case Right(a) => a
+    case Left(e)  => r.raise(e)
