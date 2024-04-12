@@ -28,7 +28,7 @@ object OptionPredef:
 def option[A](block: OptionRaise ?=> A): Option[A] =
   fold(
     {
-      given optionRaise: OptionRaise = new OptionRaise(new DefaultRaise())
+      given optionRaise: OptionRaise = new OptionRaise(new DefaultRaise()) // ???
       block(using optionRaise)
     },
     _ => None,

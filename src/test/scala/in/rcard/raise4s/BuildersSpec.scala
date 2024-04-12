@@ -12,4 +12,12 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
   it should "create a Right instance" in {
     either { "success" } should be(Right("success"))
   }
+
+  "The option builder" should "create a None instance" in {
+    option { raise(None) } should be(None)
+  }
+
+  it should "create a Some instance" in {
+    option { "success" } should be(Some("success"))
+  }
 }
