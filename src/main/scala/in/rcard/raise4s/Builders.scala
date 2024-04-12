@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import scala.util.{Failure, Success, Try}
+
 /** Runs a computation `block` using [[Raise]], and return its outcome as [[Either]].
   *   - [[Right]] represents success,
   *   - [[Left]] represents logical failure.
@@ -39,4 +41,23 @@ def option[A](block: OptionRaise ?=> A): Option[A] =
     },
     _ => None,
     Some(_)
+  )
+
+class TryRaise(val raise: Raise[Throwable]) extends Raise[Throwable]:
+  override def raise(error: Throwable): Nothing = raise.raise(error)
+
+object TryPredef:
+  extension [A](tryValue: Try[A])(using tryRaise: TryRaise)
+    def bind(): A = tryValue match
+      case Success(a) => a
+      case Failure(e) => tryRaise.raise(e)
+
+def $try[A](block: TryRaise ?=> A): Try[A] =
+  fold(
+    {
+      given tryRaise: TryRaise = new TryRaise(new DefaultRaise())
+      block(using tryRaise)
+    },
+    Failure(_),
+    Success(_)
   )
