@@ -148,7 +148,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
     val actual = either {
       val x = one.bind()
-      val y = recover({ left.bind() }, { String => 1 })
+      val y = recover({ left.bind() }, { _ => 1 })
       x + y
     }
 
