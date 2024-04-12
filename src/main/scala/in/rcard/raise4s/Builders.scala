@@ -18,6 +18,12 @@ package in.rcard.raise4s
 def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
   fold(block, error => Left(error), value => Right(value))
 
+object EitherPredef:
+  extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
+    def bind(): A = either match
+      case Right(a) => a
+      case Left(e)  => r.raise(e)
+
 class OptionRaise(val raise: Raise[Option[Nothing]]) extends Raise[Option[Nothing]]:
   override def raise(error: Option[Nothing]): Nothing = raise.raise(error)
 

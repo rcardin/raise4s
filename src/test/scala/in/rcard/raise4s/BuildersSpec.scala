@@ -1,5 +1,6 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.EitherPredef.bind
 import in.rcard.raise4s.OptionPredef.bind
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -12,6 +13,24 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
   it should "create a Right instance" in {
     either { "success" } should be(Right("success"))
+  }
+
+  "Either.bind" should "return the value if it is not an error and raise an Error otherwise" in {
+    val one: Either[Nothing, Int] = Right(1)
+    val left: Either[String, Int] = Left("error")
+
+    val actual = either {
+      val x = one.bind()
+      val y = recover(
+        {
+          left.bind()
+        },
+        { _ => 1 }
+      )
+      x + y
+    }
+
+    actual should be(Right(2))
   }
 
   "The option builder" should "create a None instance" in {
@@ -28,7 +47,7 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
     val actual = option {
       val x = some.bind()
-      val y =  recover({ none.bind() }, { _ => 1 })
+      val y = recover({ none.bind() }, { _ => 1 })
       x + y
     }
 
