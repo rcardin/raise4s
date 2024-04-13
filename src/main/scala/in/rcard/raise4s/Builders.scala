@@ -26,25 +26,19 @@ object RaiseEitherPredef:
       case Right(a) => a
       case Left(e)  => r.raise(e)
 
-class OptionRaise(val raise: Raise[Option[Nothing]]) extends Raise[Option[Nothing]]:
-  override def raise(error: Option[Nothing]): Nothing = raise.raise(error)
-
 object RaiseOptionPredef:
   extension [A](option: Option[A])(using optionRaise: Raise[None.type])
     def bind(): A = option.getOrElse(raise(None))
 
-def option[A](block: OptionRaise ?=> A): Option[A] =
+def option[A](block: Raise[None.type] ?=> A): Option[A] =
   fold(
     {
-      given optionRaise: OptionRaise = new OptionRaise(new DefaultRaise()) // ???
+      given optionRaise: Raise[None.type] = new DefaultRaise() // ???
       block(using optionRaise)
     },
     _ => None,
     Some(_)
   )
-
-class TryRaise(val raise: Raise[Throwable]) extends Raise[Throwable]:
-  override def raise(error: Throwable): Nothing = raise.raise(error)
 
 object RaiseTryPredef:
   extension [A](tryValue: Try[A])(using tryRaise: Raise[Throwable])
@@ -52,10 +46,10 @@ object RaiseTryPredef:
       case Success(a) => a
       case Failure(e) => tryRaise.raise(e)
 
-def $try[A](block: TryRaise ?=> A): Try[A] =
+def $try[A](block: Raise[Throwable] ?=> A): Try[A] =
   fold(
     {
-      given tryRaise: TryRaise = new TryRaise(new DefaultRaise())
+      given tryRaise: Raise[Throwable] = new DefaultRaise()
       block(using tryRaise)
     },
     Failure(_),
