@@ -1,7 +1,10 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.RaiseEitherPredef.bind
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+
+import scala.util.{Success, Try}
 
 class FoldSpec extends AnyFlatSpec with Matchers {
 

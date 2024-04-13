@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
 def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
   fold(block, error => Left(error), value => Right(value))
 
-object EitherPredef:
+object RaiseEitherPredef:
   extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
     def bind(): A = either match
       case Right(a) => a
@@ -29,8 +29,8 @@ object EitherPredef:
 class OptionRaise(val raise: Raise[Option[Nothing]]) extends Raise[Option[Nothing]]:
   override def raise(error: Option[Nothing]): Nothing = raise.raise(error)
 
-object OptionPredef:
-  extension [A](option: Option[A])(using optionRaise: OptionRaise)
+object RaiseOptionPredef:
+  extension [A](option: Option[A])(using optionRaise: Raise[None.type])
     def bind(): A = option.getOrElse(raise(None))
 
 def option[A](block: OptionRaise ?=> A): Option[A] =
@@ -46,8 +46,8 @@ def option[A](block: OptionRaise ?=> A): Option[A] =
 class TryRaise(val raise: Raise[Throwable]) extends Raise[Throwable]:
   override def raise(error: Throwable): Nothing = raise.raise(error)
 
-object TryPredef:
-  extension [A](tryValue: Try[A])(using tryRaise: TryRaise)
+object RaiseTryPredef:
+  extension [A](tryValue: Try[A])(using tryRaise: Raise[Throwable])
     def bind(): A = tryValue match
       case Success(a) => a
       case Failure(e) => tryRaise.raise(e)

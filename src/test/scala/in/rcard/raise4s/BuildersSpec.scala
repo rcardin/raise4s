@@ -1,9 +1,12 @@
 package in.rcard.raise4s
 
-import in.rcard.raise4s.EitherPredef.bind
-import in.rcard.raise4s.OptionPredef.bind
+import in.rcard.raise4s.RaiseEitherPredef.bind
+import in.rcard.raise4s.RaiseOptionPredef.bind
+import in.rcard.raise4s.RaiseTryPredef.bind
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+
+import scala.util.{Failure, Success, Try}
 
 class BuildersSpec extends AnyFlatSpec with Matchers {
 
@@ -53,5 +56,30 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
     actual should be(Some(2))
 
+  }
+
+  "The try builder" should "create a Failure instance" in {
+    val actual = $try { raise(new Exception("error")) }
+
+    actual.isFailure should be(true)
+  }
+
+  it should "create a Success instance" in {
+    val actual = $try { "success" }
+
+    actual should be(Success("success"))
+  }
+
+  "Try.bind" should "return the value if it is not an error and raise an Error otherwise" in {
+    val one: Try[Int]     = Success(1)
+    val failure: Try[Int] = Failure(new Exception("error"))
+
+    val actual = $try {
+      val x = one.bind()
+      val y = recover({ failure.bind() }, { _ => 1 })
+      x + y
+    }
+
+    actual should be(Success(2))
   }
 }

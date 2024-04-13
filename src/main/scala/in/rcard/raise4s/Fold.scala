@@ -27,3 +27,10 @@ def fold[A, B, Error](
     recover: (error: Error) => B,
     transform: (value: A) => B
 ): B = fold(block, ex => throw ex, recover, transform)
+
+//def runRaise[Error, A](block: Raise[Error] ?=> A): Error | A =
+//  given raise: Raise[Error] = new DefaultRaise
+//  try block(using raise)
+//  catch
+//    case Raised(error)        => error.asInstanceOf[Error]
+//    case throwable: Throwable => throw throwable
