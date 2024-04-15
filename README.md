@@ -17,7 +17,7 @@ The library is only available for Scala 3.
 
 ## Usage
 
-The Raise DSL is a new way to handle typed errors in Scala. Instead of using a wrapper type to address both the happy path and errors, the `Raise[E]` type describes the possibility that a function can raise a logical error of type `E`. A function that can raise an error of type `E` must execute in a scope that can also handle the error. In recent Scala, it's something that is referred to _direct style.
+The Raise DSL is a new way to handle typed errors in Scala. Instead of using a wrapper type to address both the happy path and errors, the `Raise[E]` type describes the possibility that a function can raise a logical error of type `E`. A function that can raise an error of type `E` must execute in a scope that can also handle the error. In recent Scala, it's something that is referred to _direct style_.
 
 The easiest way to define a function that can raise an error of type `E` is to create a context function using the `Raise[E]` the implicit parameter:
 
