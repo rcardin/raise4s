@@ -24,8 +24,8 @@ infix type raises[R, Error] = Raise[Error] ?=> R
   * }}}
   *
   * @param e
-  *   An error of type `Error` that will short-circuit the computation. Behaves similarly to _return_
-  *   or _throw_.
+  *   An error of type `Error` that will short-circuit the computation. Behaves similarly to
+  *   _return_ or _throw_.
   * @param raise
   *   The Raise context
   * @tparam Error
@@ -119,8 +119,9 @@ def recover[Error, A](block: Raise[Error] ?=> A, recover: Error => A): A =
   fold(block, ex => throw ex, recover, identity)
 
 /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type `Error`,
-  * and `recover` by providing a transform `Error` into a fallback value of type `A`,
-  * or `catchBlock` any unexpected exceptions by providing a transform [[Throwable]] into a fallback value of type `A`.
+  * and `recover` by providing a transform `Error` into a fallback value of type `A`, or
+  * `catchBlock` any unexpected exceptions by providing a transform [[Throwable]] into a fallback
+  * value of type `A`.
   *
   * <h2>Example</h2>
   * {{{
@@ -132,12 +133,19 @@ def recover[Error, A](block: Raise[Error] ?=> A, recover: Error => A): A =
   * actual should be(43)
   * }}}
   *
-  * @param block The block to execute
-  * @param recover The function to transform the error into a fallback value
-  * @param catchBlock The function to transform the exception into a fallback value
-  * @tparam Error The type of the error that can be raised and recovered
-  * @tparam A The type of the result of the `block`
-  * @return The result of the `block`, the fallback value from the `recover` function, or the fallback value from the `catchBlock` function
+  * @param block
+  *   The block to execute
+  * @param recover
+  *   The function to transform the error into a fallback value
+  * @param catchBlock
+  *   The function to transform the exception into a fallback value
+  * @tparam Error
+  *   The type of the error that can be raised and recovered
+  * @tparam A
+  *   The type of the result of the `block`
+  * @return
+  *   The result of the `block`, the fallback value from the `recover` function, or the fallback
+  *   value from the `catchBlock` function
   */
 def recover[Error, A](
     block: Raise[Error] ?=> A,
@@ -146,12 +154,48 @@ def recover[Error, A](
 ): A =
   fold(block, catchBlock, recover, identity)
 
+/** Allows safely catching [[NonFatal]] exceptions without capturing exceptions like
+  * [[OutOfMemoryError]] or [[VirtualMachineError]], etc.
+  *
+  * <h2>Example</h2>
+  * {{{
+  * val actual = $catch(
+  *   () => throw new RuntimeException("error"),
+  *   ex => 43
+  * )
+  * actual should be(43)
+  * }}}
+  *
+  * @param block The block to execute
+  * @param catchBlock The function to transform the exception into a fallback value
+  * @tparam A The type of the result of the `block`
+  * @return The result of the `block` or the fallback value
+  */
 def $catch[A](block: () => A, catchBlock: Throwable => A): A =
   try block()
   catch
     case NonFatal(e) => catchBlock(e)
     case ex          => throw ex
 
+/** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type `OtherError`,
+  * and transform any raised `OtherError` into `Error`, which is raised to the outer [[Raise]].
+  *
+  * <h2>Example</h2>
+  * {{{
+  * val actual = either {
+  *   withError[Int, String, Int](s => s.length, { raise("error") })
+  * }
+  * actual should be(Left(5))
+  * }}}
+  *
+  * @param transform The function to transform the `OtherError` into `Error`
+  * @param block The block to execute
+  * @param r The Raise context
+  * @tparam Error The type of the transformed logical error
+  * @tparam OtherError The type of the logical error that can be raised and transformed
+  * @tparam A The type of the result of the `block`
+  * @return The result of the `block`
+  */
 def withError[Error, OtherError, A](
     transform: OtherError => Error,
     block: Raise[OtherError] ?=> A
