@@ -1,5 +1,5 @@
 inThisBuild(List(
-  organization := "com.github.rcardin",
+  organization := "in.rcard",
   homepage := Some(url("https://github.com/rcardin")),
   // Alternatively License.Apache2 see https://github.com/sbt/librarymanagement/blob/develop/core/src/main/scala/sbt/librarymanagement/License.scala
   licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
