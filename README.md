@@ -14,3 +14,67 @@ libraryDependencies += "in.rcard" % "raise4s_3" % "0.0.1"
 ```
 
 The library is only available for Scala 3.
+
+## Usage
+
+The Raise DSL is a new way to handle typed errors in Scala. Instead of using a wrapper type to address both the happy path and errors, the `Raise[E]` type describes the possibility that a function can raise a logical error of type `E`. A function that can raise an error of type `E` must execute in a scope that can also handle the error. In recent Scala, it's something that is referred to _direct style.
+
+The easiest way to define a function that can raise an error of type `E` is to create a context function using the `Raise[E]` the implicit parameter:
+
+```scala 3
+case class User(id: String)
+def findUserById(id: String): Raise[String] ?=> User = User(id)
+```
+
+We can do better than that, using the `infix type raises`:
+
+```scala 3
+def findUserById(id: String): User raises String = User(id)
+```
+
+How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `String`.
+
+The above function let us short-circuit an execution and raise an error of type `String` using the `raise` function:
+
+```scala 3
+def findUserById(id: String): User raises String =
+  if (id == "42") User(id) else raise(s"User with id $id not found")
+```
+
+The type of error a function can raise is checked at compile time. If we try to raise an error of a different type, the compiler will complain:
+
+```scala 3
+def findUserById(id: String): User raises String =
+  if (id == "42") User(id) else raise(43)
+```
+
+The above code will not compile with the following error:
+
+```
+[error] 8 |  if (id == "42") User(id) else raise(43)
+[error]   |                                         ^
+[error]   |No given instance of type in.rcard.raise4s.Raise[Int] was found for parameter raise of method raise in package in.rcard.raise4s
+```
+
+We may have noticed that one advantage of using the `Raise[E]` context is that the return type of the function listed only the happy path. As we’ll see in a moment, this is a huge advantage when we want to compose functions that can raise errors.
+
+As you might guess from the previous compiler error, the Raise DSL is using implicit resolutions under the hood. In fact, to execute a function that uses the Raise DSL we need to provide an instance of the `Raise[E]` type class for the error type `E`. The most generic way to execute a function that can raise an error of type `E` and that is defined in the context of a `Raise[E]` is the `fold` function:
+
+```scala 3
+fold(
+  block = { findUserById("43") },
+  catchBlock = ex => println(s"Error: $ex"),
+  recover = error => println(s"User not found: $error"),
+  transform = user => println(s"User found: $user")
+)
+```
+
+Let’s split the above function into parts. The `block` parameter is the function that we want to execute. The `catchBlock` parameter is a function that is executed when the `block` function throws an exception. Don't worry: The lambda handles only `NonFatal` exceptions. The `recover` parameter is a function that is executed when the `block` function raises a logical typed error of type `E`. Finally, the `transform` parameter is a function that is executed when the block function returns a value of type `A`, which is the happy path. All the handling blocks return the exact value of type `B`.
+
+The `fold` function “consumes” the context, creating a concrete instance of a `Raise[E]` type and executing the `block` lambda in the context of that instance.
+
+There are other flavors of the `fold` function. So, please, be sure to check them in the documentation.
+
+Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. 
+
+
