@@ -23,13 +23,17 @@ The easiest way to define a function that can raise an error of type `E` is to c
 
 ```scala 3
 case class User(id: String)
-def findUserById(id: String): Raise[String] ?=> User = User(id)
+
+sealed trait Error
+case class UserNotFound(id: String) extends Error
+
+def findUserById(id: String): Raise[Error] ?=> User = User(id)
 ```
 
 We can do better than that, using the `infix type raises`:
 
 ```scala 3
-def findUserById(id: String): User raises String = User(id)
+def findUserById(id: String): User raises Error = User(id)
 ```
 
 How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `String`.
@@ -37,23 +41,24 @@ How do we read the above syntax? The function `findUserById` returns a `User` an
 The above function let us short-circuit an execution and raise an error of type `String` using the `raise` function:
 
 ```scala 3
-def findUserById(id: String): User raises String =
-  if (id == "42") User(id) else raise(s"User with id $id not found")
+def findUserById(id: String): User raises Error =
+  if (id == "42") User(id) else raise(UserNotFound(id))
 ```
 
 The type of error a function can raise is checked at compile time. If we try to raise an error of a different type, the compiler will complain:
 
 ```scala 3
-def findUserById(id: String): User raises String =
-  if (id == "42") User(id) else raise(43)
+def findUserById(id: String): User raises Error =
+  if (id == "42") User(id) else raise("User not found")
 ```
 
 The above code will not compile with the following error:
 
 ```
-[error] 8 |  if (id == "42") User(id) else raise(43)
-[error]   |                                         ^
-[error]   |No given instance of type in.rcard.raise4s.Raise[Int] was found for parameter raise of method raise in package in.rcard.raise4s
+[error] 9 |  if (id == "42") User(id) else raise("User not found")
+[error]   |                                                       ^
+[error]   |No given instance of type in.rcard.raise4s.Raise[String] was found for parameter raise of method raise in package in.rcard.raise4s
+[error] one error found
 ```
 
 We may have noticed that one advantage of using the `Raise[E]` context is that the return type of the function listed only the happy path. As we’ll see in a moment, this is a huge advantage when we want to compose functions that can raise errors.
@@ -75,6 +80,22 @@ The `fold` function “consumes” the context, creating a concrete instance of 
 
 There are other flavors of the `fold` function. So, please, be sure to check them in the documentation.
 
-Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. 
+Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. What if we want to convert the exception into a typed error? For example, we want to convert the `IllegalArgumentException` into a `UserNotFound`. Well, we can do it using a function called `$catch`:
+
+```scala 3
+def findUserByIdWithEx(id: String): User =
+  if (id == "42") User(id) else throw new IllegalArgumentException(s"User not found with id: $id")
+
+either {
+  $catch[User](() => findUserByIdWithEx("42"), {
+    case _: IllegalArgumentException => raise(UserNotFound("42"))
+  })
+}
+```
+
+We will see the `either` function in a moment. As we can see, there’s nothing special with the `$catch` function. It just catches the exception and calls the catch lambda with the exception. The `$catch` function lets the fatal exception bubble up.
+
+
+
 
 
