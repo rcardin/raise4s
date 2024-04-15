@@ -86,11 +86,11 @@ Please be aware that any exception thrown inside the `Raise[E]` context will bub
 def findUserByIdWithEx(id: String): User =
   if (id == "42") User(id) else throw new IllegalArgumentException(s"User not found with id: $id")
 
-either {
-  $catch[User](() => findUserByIdWithEx("42"), {
-    case _: IllegalArgumentException => raise(UserNotFound("42"))
-  })
-}
+val maybeUser: Either[Error, User] =
+  either:
+    $catch[User](() => findUserByIdWithEx("42"), {
+      case _: IllegalArgumentException => raise(UserNotFound("42"))
+    })
 ```
 
 We will see the `either` function in a moment. As we can see, there’s nothing special with the `$catch` function. It just catches the exception and calls the catch lambda with the exception. The `$catch` function lets the fatal exception bubble up.
