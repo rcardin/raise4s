@@ -9,10 +9,11 @@ private case class Raised[Error](original: Error) extends ControlThrowable with 
 
 /** The most general way to execute a computation using [[Raise]].
   * Depending on the outcome of the `block`, one of the three continuations is run:
-  * - _success_ `transform` result of [A] to a value of [B].
-  * - _raised_ `recover` from raised value of `Error` to a value of `B`.
-  * - _exception_ `catch` from [[Throwable]] by transforming value into `B`.
-  *
+ * <ul>
+  * <li><em>success</em> `transform` result of [A] to a value of [B].</li>
+  * <li><em>raised</em> `recover` from raised value of `Error` to a value of `B`.</li>
+  * <li><em>exception</em> `catch` from [[Throwable]] by transforming value into `B`.</li>
+  * </ul>
   * This method should never be wrapped in `try`/`catch` as it will not throw any unexpected errors,
   * it will only result in fatal exceptions such as [[OutOfMemoryError]].
   *
@@ -52,9 +53,10 @@ end fold
 /**
   * The most general way to execute a computation using [[Raise]].
   * Depending on the outcome of the `block`, one of the two continuations is run:
-  * - _success_ `transform` result of `A` to a value of `B`.
-  * - _raised_ `recover` from raised value of `Error` to a value of `B`.
-  *
+ * <ul>
+  * <li><em>success</em> `transform` result of `A` to a value of `B`.</li>
+  * <li><em>raised</em> `recover` from raised value of `Error` to a value of `B`.</li>
+  * </ul>
   * This function re-throws any exceptions thrown within the [[Raise]] block.
   *
   * <h2>Example</h2>
