@@ -183,7 +183,7 @@ If you want to contribute to the project, please do it! Any help is welcome.
 
 ## Acknowledgments
 
-This project is inspired by the Raise DSL of the Arrow Kt library. I would like to thank the Arrow Kt team for the great work they are doing. In detail, a ton of thanks to Simon Vergauwen for the great discussions we had on Slack.
+This project is inspired by the Arrow Kt library's Raise DSL. I want to thank the Arrow Kt team for their outstanding work. In detail, thanks to Simon Vergauwen for the great discussions we had on Slack. A lot of thanks also to Daniel Ciocîrlan, my mentor and friend.
 
 
 
