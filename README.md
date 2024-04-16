@@ -24,18 +24,18 @@ The Raise DSL is a new way to handle typed errors in Scala. Instead of using a w
 The easiest way to define a function that can raise an error of type `E` is to create a context function using the `Raise[E]` the implicit parameter:
 
 ```scala 3
-case class User(id: String)
+case class User(id: String, name: String)
 
 sealed trait Error
 case class UserNotFound(id: String) extends Error
 
-def findUserById(id: String): Raise[Error] ?=> User = User(id)
+def findUserById(id: String): Raise[Error] ?=> User = User(id, "Alice")
 ```
 
 We can do better than that, using the `infix type raises`:
 
 ```scala 3
-def findUserById(id: String): User raises Error = User(id)
+def findUserById(id: String): User raises Error = User(id, "Alice")
 ```
 
 How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `String`.
@@ -44,14 +44,14 @@ The above function let us short-circuit an execution and raise an error of type 
 
 ```scala 3
 def findUserById(id: String): User raises Error =
-  if (id == "42") User(id) else raise(UserNotFound(id))
+  if (id == "42") User(id, "Alice") else raise(UserNotFound(id))
 ```
 
 The type of error a function can raise is checked at compile time. If we try to raise an error of a different type, the compiler will complain:
 
 ```scala 3
 def findUserById(id: String): User raises Error =
-  if (id == "42") User(id) else raise("User not found")
+  if (id == "42") User(id, "Alice") else raise("User not found")
 ```
 
 The above code will not compile with the following error:
@@ -86,7 +86,7 @@ Please be aware that any exception thrown inside the `Raise[E]` context will bub
 
 ```scala 3
 def findUserByIdWithEx(id: String): User =
-  if (id == "42") User(id) else throw new IllegalArgumentException(s"User not found with id: $id")
+  if (id == "42") User(id, "Alice") else throw new IllegalArgumentException(s"User not found with id: $id")
 
 val maybeUser: Either[Error, User] =
   either:
@@ -111,8 +111,79 @@ val usdAmount: Double =
 
 ### Conversion to Wrapped Types
 
-TODO
+What if we want to convert a computation in the `Raise[E]` context to a function returning an `Either[E, A]`, a `Try[A]`, an `Option[A]`? Well, nothing is more straightforward than that. 
 
+Let’s start with `Either[E, A]`. The `either` builder is what we're searching for. We can translate the result of the `findUserById` function to an `Either[Error, User]` quite easily:
+
+```scala 3
+val maybeUser: Either[Error, User] = 
+  either:
+    findUserById("42")
+```
+
+If we want to retrieve more information of a user using her name, we can just use the `User` instance directly:
+
+```scala 3
+val maybeUserNameInUpperCase: Either[Error, String] = 
+  either:
+    val user: User = findUserById("42")
+    user.name.toUpperCase
+```
+
+Please praise the simplicity and absence of boilerplate code, like calls to `map` functions or when expressions. This is the power of Scala direct style.
+
+It’s also possible to make the backward conversion from an `Either[E, A]` to a `Raise[E]` using the `bind` function:
+
+```scala 3
+val userNameInUpperCaseRaiseLambda: Raise[Error] ?=> String = maybeUserNameInUpperCase.bind()
+```
+
+The `bind` function is very handful when we need to compose functions that return an `Either[E, A]`:
+
+```scala 3
+val one = Right(1)
+val two = Right(2)
+val three = either {
+  val oneValue = one.bind()
+  val twoValue = two.bind()
+  oneValue + twoValue
+}
+```
+
+The `bind` function calls the `raise` function if the `Either` instance is a `Left`; otherwise, it returns the value wrapped by the `Right` instance. Despite the trivial logic implemented in the above example, it's a good example of how to compose functions that return an `Either[E, A]` using the Raise DSL without the use of any `flatMap` function.
+
+We can do the same with `Try[A]` and `Option[A]` using the `$try` and `option` builders, respectively. Let's start with the `$try` builder. In this case, the only available type of error is `Throwable`:
+
+```scala 3
+val maybeUserWithTry: Try[User] =
+  $try:
+    findUserByIdWithEx("42")
+```
+
+As you might guess, any fatal exception thrown inside the `$try` context will bubble up and not handled.
+
+Last but not least, the `option` builder:
+
+```scala 3
+def findUserByIdWithNone(id: String): User =
+  if (id == "42") User(id, "Alice") else raise(None)
+
+val maybeUserWithOpt: Option[User] =
+  option:
+    findUserByIdWithNone("42")
+```
+
+The `bind` function is available for `Try[A]` and `Option[A]` as well.
+
+By the way, there are more feature in the Raise DSL. Please, check the documentation for more information.
+
+## Contributing
+
+If you want to contribute to the project, please do it! Any help is welcome.
+
+## Acknowledgments
+
+This project is inspired by the Raise DSL of the Arrow Kt library. I would like to thank the Arrow Kt team for the great work they are doing. In detail, a ton of thanks to Simon Vergauwen for the great discussions we had on Slack.
 
 
 
