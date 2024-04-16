@@ -7,6 +7,34 @@ private class DefaultRaise extends Raise[Any]:
 
 private case class Raised[Error](original: Error) extends ControlThrowable with NoStackTrace
 
+/** The most general way to execute a computation using [[Raise]].
+  * Depending on the outcome of the `block`, one of the three continuations is run:
+  * - _success_ `transform` result of [A] to a value of [B].
+  * - _raised_ `recover` from raised value of `Error` to a value of `B`.
+  * - _exception_ `catch` from [[Throwable]] by transforming value into `B`.
+  *
+  * This method should never be wrapped in `try`/`catch` as it will not throw any unexpected errors,
+  * it will only result in fatal exceptions such as [[OutOfMemoryError]].
+  *
+  * <h2>Example</h2>
+  * {{{
+  * val actual: String = fold(
+  *   { 42 },
+  *   throwable => "Error: " + throwable.getMessage,
+  *   error => "Error: " + error,
+  *   value => "Value: " + value
+  * )
+  * actual shouldBe "Value: 42"
+  * }}}
+  *
+  * @param block The block of code to execute that can raise an a logical type error
+  * @param catchBlock The block of code to execute when a [[NonFatal]] exception is thrown
+  * @param recover The block of code to execute when a logical error is raised
+  * @param transform The block of code to execute when the block of code is executed successfully
+  * @tparam A The type of the result of the execution of `block` lambda
+  * @tparam B The type of the result of the `fold` method
+  * @tparam Error The type of the logical error that can be raised by the `block` lambda
+  */
 def fold[A, B, Error](
     block: Raise[Error] ?=> A,
     catchBlock: (throwable: Throwable) => B,
@@ -21,6 +49,31 @@ def fold[A, B, Error](
     case e: Throwable  => throw e
 end fold
 
+/**
+  * The most general way to execute a computation using [[Raise]].
+  * Depending on the outcome of the `block`, one of the two continuations is run:
+  * - _success_ `transform` result of `A` to a value of `B`.
+  * - _raised_ `recover` from raised value of `Error` to a value of `B`.
+  *
+  * This function re-throws any exceptions thrown within the [[Raise]] block.
+  *
+  * <h2>Example</h2>
+  * {{{
+  * val actual: String = fold(
+  *   { 42 },
+  *   error => "Error: " + error,
+  *   value => "Value: " + value
+  * )
+  * actual shouldBe "Value: 42"
+  * }}}
+  *
+  * @param block The block of code to execute that can raise an a logical type error
+  * @param recover The block of code to execute when a logical error is raised
+  * @param transform The block of code to execute when the block of code is executed successfully
+  * @tparam A The type of the result of the execution of `block` lambda
+  * @tparam B The type of the result of the `fold` method
+  * @tparam Error The type of the logical error that can be raised by the `block` lambda
+  */
 //noinspection NoTailRecursionAnnotation
 def fold[A, B, Error](
     block: Raise[Error] ?=> A,
