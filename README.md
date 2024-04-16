@@ -17,6 +17,8 @@ The library is only available for Scala 3.
 
 ## Usage
 
+### The `Raise` DSL in Scala
+
 The Raise DSL is a new way to handle typed errors in Scala. Instead of using a wrapper type to address both the happy path and errors, the `Raise[E]` type describes the possibility that a function can raise a logical error of type `E`. A function that can raise an error of type `E` must execute in a scope that can also handle the error. In recent Scala, it's something that is referred to _direct style_.
 
 The easiest way to define a function that can raise an error of type `E` is to create a context function using the `Raise[E]` the implicit parameter:
@@ -94,6 +96,24 @@ val maybeUser: Either[Error, User] =
 ```
 
 We will see the `either` function in a moment. As we can see, there’s nothing special with the `$catch` function. It just catches the exception and calls the catch lambda with the exception. The `$catch` function lets the fatal exception bubble up.
+
+It’s a different story if we want to recover or react to a typed error. In this case, we can use the `recover` function:
+
+```scala 3
+case class NegativeAmount(amount: Double) extends Error
+def convertToUsd(amount: Double, currency: String): Double raises NegativeAmount =
+  if (amount < 0) raise(NegativeAmount(amount))
+  else amount * 1.2
+
+val usdAmount: Double =
+  recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
+```
+
+### Conversion to Wrapped Types
+
+TODO
+
+
 
 
 
