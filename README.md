@@ -165,7 +165,7 @@ As you might guess, any fatal exception thrown inside the `$try` context will bu
 Last but not least, the `option` builder:
 
 ```scala 3
-def findUserByIdWithNone(id: String): User =
+def findUserByIdWithNone(id: String): User raises None.type =
   if (id == "42") User(id, "Alice") else raise(None)
 
 val maybeUserWithOpt: Option[User] =
