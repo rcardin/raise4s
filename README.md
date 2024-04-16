@@ -10,7 +10,7 @@ Porting of the Raise DSL from the Arrow Kt Kotlin library
 The library is available on Maven Central. To use it, add the following dependency to your `build.sbt` files:
 
 ```sbt
-libraryDependencies += "in.rcard" % "raise4s_3" % "0.0.1"
+libraryDependencies += "in.rcard" % "raise4s_3" % "0.0.2"
 ```
 
 The library is only available for Scala 3.
