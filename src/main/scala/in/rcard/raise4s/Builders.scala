@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import scala.annotation.experimental
+import scala.reflect.TypeTest
 import scala.util.{Failure, Success, Try}
 
 /** Runs a computation `block` using [[Raise]], and return its outcome as [[Either]].
@@ -100,9 +102,12 @@ object RaiseTryPredef:
   * actual should be(Success(2))
   * }}}
   *
-  * @param block A computation that can raise errors of type `Throwable`
-  * @tparam A The type of the value returned by the computation
-  * @return An [[Try]] representing the outcome of the computation
+  * @param block
+  *   A computation that can raise errors of type `Throwable`
+  * @tparam A
+  *   The type of the value returned by the computation
+  * @return
+  *   An [[Try]] representing the outcome of the computation
   */
 def $try[A](block: Raise[Throwable] ?=> A): Try[A] =
   fold(
@@ -113,3 +118,15 @@ def $try[A](block: Raise[Throwable] ?=> A): Try[A] =
     Failure(_),
     Success(_)
   )
+
+object RaiseUnionPredef:
+  extension [Error, A](unionType: Error | A)
+    @experimental
+    def toEither(using aTest: TypeTest[Any, A], eTest: TypeTest[Any, Error]): Either[Error, A] = unionType match
+      case error: Error => Left(error)
+      case a: A => Right(a)
+      
+    @experimental
+    def toOption(using aTest: TypeTest[Any, A], eTest: TypeTest[Any, Error]): Option[A] = unionType match
+      case error: Error => None
+      case a: A => Some(a)
