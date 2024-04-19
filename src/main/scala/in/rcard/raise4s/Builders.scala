@@ -42,6 +42,7 @@ def $try[A](block: Raise[Throwable] ?=> A): Try[A] =
   )
 
 object RaiseAnyPredef:
-  extension [A](value: A)(using raise: Raise[Nothing])
-    def succeed(): Raise[Nothing] ?=> A = { value }
-    
+  extension [A](value: A) def succeed: Raise[Nothing] ?=> A = { value }
+
+  extension [Error](value: Error)(using raise: Raise[Error])
+    def raise[A]: Raise[Error] ?=> A = raise.raise(value)
