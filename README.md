@@ -63,6 +63,26 @@ The above code will not compile with the following error:
 [error] one error found
 ```
 
+It's also possible to lift a value to the context `Raise[E] ?=> A`. If we want to lift a value of type `A` to the context `Raise[Nothing]`, we can use the `succeed` function:
+
+```scala 3
+def aliceUser: User raises UserNotFound = Raise.succeed(User("42", "Alice"))
+```
+
+More useful is to lift a value of type `E` as the error in the context `Raise[E]`:
+
+```scala 3
+def userNotFound: User raises UserNotFound = UserNotFound("42").raise[User]
+```
+
+We can always rewrite che last function as follows:
+
+```scala 3
+def userNotFound: User raises UserNotFound = {
+  Raise.raise(UserNotFound("42"))
+}
+```
+
 We may have noticed that one advantage of using the `Raise[E]` context is that the return type of the function listed only the happy path. As we’ll see in a moment, this is a huge advantage when we want to compose functions that can raise errors.
 
 As you might guess from the previous compiler error, the Raise DSL is using implicit resolutions under the hood. In fact, to execute a function that uses the Raise DSL we need to provide an instance of the `Raise[E]` type class for the error type `E`. The most generic way to execute a function that can raise an error of type `E` and that is defined in the context of a `Raise[E]` is the `fold` function:
