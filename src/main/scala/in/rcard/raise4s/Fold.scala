@@ -38,9 +38,8 @@ private[raise4s] def mapOrAccumulate[Error, A, B](
   if errors.isEmpty then results.toList
   else r.raise(errors.toList)
 
-//def runRaise[Error, A](block: Raise[Error] ?=> A): Error | A =
-//  given raise: Raise[Error] = new DefaultRaise
-//  try block(using raise)
-//  catch
-//    case Raised(error)        => error.asInstanceOf[Error]
-//    case throwable: Throwable => throw throwable
+object RaiseIterableDef:
+  extension [Error, A, B](iterable: Iterable[A])
+    def mapOrAccumulate(transform: Raise[Error] ?=> A => B)(using r: Raise[List[Error]]): List[B] =
+      Raise.mapOrAccumulate(iterable, transform)
+
