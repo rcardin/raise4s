@@ -102,7 +102,7 @@ The `fold` function “consumes” the context, creating a concrete instance of 
 
 There are other flavors of the `fold` function. So, please, be sure to check them in the documentation.
 
-Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. What if we want to convert the exception into a typed error? For example, we want to convert the `IllegalArgumentException` into a `UserNotFound`. Well, we can do it using a function called `$catch`:
+Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. What if we want to convert the exception into a typed error? For example, we want to convert the `IllegalArgumentException` into a `UserNotFound`. Well, we can do it using a function called `catching`:
 
 ```scala 3
 def findUserByIdWithEx(id: String): User =
@@ -110,12 +110,12 @@ def findUserByIdWithEx(id: String): User =
 
 val maybeUser: Either[Error, User] =
   Raise.either:
-    Raise.$catch[User](() => findUserByIdWithEx("42"), {
+    Raise.catching[User](() => findUserByIdWithEx("42"), {
       case _: IllegalArgumentException => Raise.raise(UserNotFound("42"))
     })
 ```
 
-We will see the `either` function in a moment. As we can see, there’s nothing special with the `$catch` function. It just catches the exception and calls the catch lambda with the exception. The `$catch` function lets the fatal exception bubble up.
+We will see the `either` function in a moment. As we can see, there’s nothing special with the `catching` function. It just catches the exception and calls the catch lambda with the exception. The `catching` function lets the fatal exception bubble up.
 
 It’s a different story if we want to recover or react to a typed error. In this case, we can use the `recover` function:
 
@@ -172,15 +172,15 @@ val three = Raise.either {
 
 The `bind` function calls the `raise` function if the `Either` instance is a `Left`; otherwise, it returns the value wrapped by the `Right` instance. Despite the trivial logic implemented in the above example, it's a good example of how to compose functions that return an `Either[E, A]` using the Raise DSL without the use of any `flatMap` function.
 
-We can do the same with `Try[A]` and `Option[A]` using the `$try` and `option` builders, respectively. Let's start with the `$try` builder. In this case, the only available type of error is `Throwable`:
+We can do the same with `Try[A]` and `Option[A]` using the `asTry` and `option` builders, respectively. Let's start with the `asTry` builder. In this case, the only available type of error is `Throwable`:
 
 ```scala 3
 val maybeUserWithTry: Try[User] =
-  Raise.$try:
+  Raise.asTry:
     findUserByIdWithEx("42")
 ```
 
-As you might guess, any fatal exception thrown inside the `$try` context will bubble up and not handled.
+As you might guess, any fatal exception thrown inside the `asTry` context will bubble up and not handled.
 
 Last but not least, the `option` builder:
 
