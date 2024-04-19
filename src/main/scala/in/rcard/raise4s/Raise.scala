@@ -364,22 +364,54 @@ object Raise {
   def option[A](block: Raise[None.type] ?=> A): Option[A] = in.rcard.raise4s.option(block)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Try]].
-   *
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val one: Try[Int]     = Success(1)
+    * val failure: Try[Int] = Failure(new Exception("error"))
+    * val actual = $try {
+    *   val x = one.bind()
+    *   val y = recover({ failure.bind() }, { _ => 1 })
+    *   x + y
+    * }
+    * actual should be(Success(2))
+    * }}}
+    *
+    * @param block
+    *   A computation that can raise errors of type `Throwable`
+    * @tparam A
+    *   The type of the value returned by the computation
+    * @return
+    *   An [[Try]] representing the outcome of the computation
+    */
+  def $try[A](block: Raise[Throwable] ?=> A): Try[A] = in.rcard.raise4s.$try(block)
+
+  /** Accumulate the errors obtained by executing the `transform` over every element of `iterable`.
+   * 
    * <h2>Example</h2>
    * {{{
-   * val one: Try[Int]     = Success(1)
-   * val failure: Try[Int] = Failure(new Exception("error"))
-   * val actual = $try {
-   *   val x = one.bind()
-   *   val y = recover({ failure.bind() }, { _ => 1 })
-   *   x + y
-   * }
-   * actual should be(Success(2))
+   * val block: List[Int] raises List[String] = Raise.mapOrAccumulate(
+   *   List(1, 2, 3, 4, 5),
+   *   _ + 1
+   * )
+   * val actual = Raise.fold(
+   *   block,
+   *   error => fail(s"An error occurred: $error"),
+   *   identity
+   * )
+   * actual shouldBe List(2, 3, 4, 5, 6)
    * }}}
-   *
-   * @param block A computation that can raise errors of type `Throwable`
-   * @tparam A The type of the value returned by the computation
-   * @return An [[Try]] representing the outcome of the computation
-   */
-  def $try[A](block: Raise[Throwable] ?=> A): Try[A] = in.rcard.raise4s.$try(block)
+    * 
+    * @param iterable The collection of elements to transform
+    * @param transform The transformation to apply to each element that can raise an error of type `Error`
+    * @param r The Raise context
+    * @tparam Error The type of the logical error that can be raised
+    * @tparam A The type of the elements in the `iterable`
+    * @tparam B The type of the transformed elements
+    * @return A list of transformed elements
+    */
+  def mapOrAccumulate[Error, A, B](
+      iterable: Iterable[A],
+      transform: Raise[Error] ?=> A => B
+  )(using r: Raise[List[Error]]): List[B] = in.rcard.raise4s.mapOrAccumulate(iterable, transform)
 }

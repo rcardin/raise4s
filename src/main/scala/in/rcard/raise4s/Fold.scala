@@ -1,6 +1,6 @@
 package in.rcard.raise4s
 
-import scala.util.control.{ControlThrowable, NoStackTrace, NonFatal}
+import scala.util.control.NonFatal
 
 def fold[A, B, Error](
     block: Raise[Error] ?=> A,
@@ -21,6 +21,22 @@ def fold[A, B, Error](
     recover: (error: Error) => B,
     transform: (value: A) => B
 ): B = fold(block, ex => throw ex, recover, transform)
+
+private[raise4s] def mapOrAccumulate[Error, A, B](
+    iterable: Iterable[A],
+    transform: Raise[Error] ?=> A => B
+)(using r: Raise[List[Error]]): List[B] =
+  val errors  = collection.mutable.ArrayBuffer.empty[Error]
+  val results = collection.mutable.ArrayBuffer.empty[B]
+  iterable.foreach(a =>
+    Raise.fold(
+      transform(a),
+      error => errors += error,
+      result => results += result
+    )
+  )
+  if errors.isEmpty then results.toList
+  else r.raise(errors.toList)
 
 //def runRaise[Error, A](block: Raise[Error] ?=> A): Error | A =
 //  given raise: Raise[Error] = new DefaultRaise
