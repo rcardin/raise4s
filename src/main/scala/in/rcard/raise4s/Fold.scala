@@ -40,6 +40,17 @@ private[raise4s] def mapOrAccumulate[Error, A, B](
 
 object RaiseIterableDef:
   extension [Error, A, B](iterable: Iterable[A])
+    /** Maps the elements of the iterable to a new value of type `B` using the provided `transform`
+      * function.
+      *
+      * @see
+      *   [[Raise.mapOrAccumulate]]
+      * @param transform
+      *   The function to transform the elements of the iterable
+      * @param r
+      *   The Raise context to accumulate the errors
+      * @return
+      *   A list of the transformed elements of the iterable
+      */
     def mapOrAccumulate(transform: Raise[Error] ?=> A => B)(using r: Raise[List[Error]]): List[B] =
       Raise.mapOrAccumulate(iterable, transform)
-
