@@ -1,5 +1,6 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.RaiseAnyPredef.succeed
 import in.rcard.raise4s.RaiseEitherPredef.bind
 import in.rcard.raise4s.RaiseOptionPredef.bind
 import in.rcard.raise4s.RaiseTryPredef.bind
@@ -81,5 +82,24 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
     }
 
     actual should be(Success(2))
+  }
+
+  "The succeed extension method" should "lift a value in the raise context" in {
+    Raise.fold(
+      42.succeed(),
+      identity,
+      { _ => "meaning of life" }
+    ) should be("meaning of life")
+  }
+
+  it should "be composable with any other raising lambda" in {
+    Raise.fold(
+      {
+        val meaningOfLife: Int = 42.succeed()
+        Raise.raise("error")
+      },
+      identity,
+      { _ => "success" }
+    ) should be("error")
   }
 }
