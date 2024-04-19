@@ -44,20 +44,20 @@ The above function let us short-circuit an execution and raise an error of type 
 
 ```scala 3
 def findUserById(id: String): User raises Error =
-  if (id == "42") User(id, "Alice") else raise(UserNotFound(id))
+  if (id == "42") User(id, "Alice") else Raise.raise(UserNotFound(id))
 ```
 
 The type of error a function can raise is checked at compile time. If we try to raise an error of a different type, the compiler will complain:
 
 ```scala 3
 def findUserById(id: String): User raises Error =
-  if (id == "42") User(id, "Alice") else raise("User not found")
+  if (id == "42") User(id, "Alice") else Raise.raise("User not found")
 ```
 
 The above code will not compile with the following error:
 
 ```
-[error] 9 |  if (id == "42") User(id) else raise("User not found")
+[error] 9 |  if (id == "42") User(id) else Raise.raise("User not found")
 [error]   |                                                       ^
 [error]   |No given instance of type in.rcard.raise4s.Raise[String] was found for parameter raise of method raise in package in.rcard.raise4s
 [error] one error found
@@ -68,7 +68,7 @@ We may have noticed that one advantage of using the `Raise[E]` context is that t
 As you might guess from the previous compiler error, the Raise DSL is using implicit resolutions under the hood. In fact, to execute a function that uses the Raise DSL we need to provide an instance of the `Raise[E]` type class for the error type `E`. The most generic way to execute a function that can raise an error of type `E` and that is defined in the context of a `Raise[E]` is the `fold` function:
 
 ```scala 3
-fold(
+Raise.fold(
   block = { findUserById("43") },
   catchBlock = ex => println(s"Error: $ex"),
   recover = error => println(s"User not found: $error"),
@@ -89,9 +89,9 @@ def findUserByIdWithEx(id: String): User =
   if (id == "42") User(id, "Alice") else throw new IllegalArgumentException(s"User not found with id: $id")
 
 val maybeUser: Either[Error, User] =
-  either:
-    $catch[User](() => findUserByIdWithEx("42"), {
-      case _: IllegalArgumentException => raise(UserNotFound("42"))
+  Raise.either:
+    Raise.$catch[User](() => findUserByIdWithEx("42"), {
+      case _: IllegalArgumentException => Raise.raise(UserNotFound("42"))
     })
 ```
 
@@ -102,11 +102,11 @@ It’s a different story if we want to recover or react to a typed error. In thi
 ```scala 3
 case class NegativeAmount(amount: Double) extends Error
 def convertToUsd(amount: Double, currency: String): Double raises NegativeAmount =
-  if (amount < 0) raise(NegativeAmount(amount))
+  if (amount < 0) Raise.raise(NegativeAmount(amount))
   else amount * 1.2
 
 val usdAmount: Double =
-  recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
+  Raise.recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
 ```
 
 ### Conversion to Wrapped Types
@@ -117,7 +117,7 @@ Let’s start with `Either[E, A]`. The `either` builder is what we're searching 
 
 ```scala 3
 val maybeUser: Either[Error, User] = 
-  either:
+  Raise.either:
     findUserById("42")
 ```
 
@@ -125,7 +125,7 @@ If we want to retrieve more information of a user using her name, we can just us
 
 ```scala 3
 val maybeUserNameInUpperCase: Either[Error, String] = 
-  either:
+  Raise.either:
     val user: User = findUserById("42")
     user.name.toUpperCase
 ```
@@ -143,7 +143,7 @@ The `bind` function is very handful when we need to compose functions that retur
 ```scala 3
 val one = Right(1)
 val two = Right(2)
-val three = either {
+val three = Raise.either {
   val oneValue = one.bind()
   val twoValue = two.bind()
   oneValue + twoValue
@@ -156,7 +156,7 @@ We can do the same with `Try[A]` and `Option[A]` using the `$try` and `option` b
 
 ```scala 3
 val maybeUserWithTry: Try[User] =
-  $try:
+  Raise.$try:
     findUserByIdWithEx("42")
 ```
 
@@ -166,10 +166,10 @@ Last but not least, the `option` builder:
 
 ```scala 3
 def findUserByIdWithNone(id: String): User raises None.type =
-  if (id == "42") User(id, "Alice") else raise(None)
+  if (id == "42") User(id, "Alice") else Raise.raise(None)
 
 val maybeUserWithOpt: Option[User] =
-  option:
+  Raise.option:
     findUserByIdWithNone("42")
 ```
 
