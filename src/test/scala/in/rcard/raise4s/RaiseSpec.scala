@@ -6,8 +6,8 @@ import org.scalatest.matchers.should.Matchers
 class RaiseSpec extends AnyFlatSpec with Matchers {
 
   "ensure" should "return Unit if the given condition is met" in {
-    val actual: Int = fold(
-      { ensure(42 > 0, () => "error") },
+    val actual: Int = Raise.fold(
+      { Raise.ensure(42 > 0, () => "error") },
       error => 43,
       value => 42
     )
@@ -15,8 +15,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the error if the condition is not met" in {
-    val actual: Int = fold(
-      { ensure(42 < 0, () => "error") },
+    val actual: Int = Raise.fold(
+      { Raise.ensure(42 < 0, () => "error") },
       error => 43,
       value => 42
     )
@@ -24,8 +24,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "ensureNotNull" should "return the value if it is not null" in {
-    val actual: Int = fold(
-      { ensureNotNull(42, () => "error") },
+    val actual: Int = Raise.fold(
+      { Raise.ensureNotNull(42, () => "error") },
       error => 43,
       identity
     )
@@ -33,8 +33,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the error if the value is null" in {
-    val actual: Int = fold(
-      { ensureNotNull(null, () => "error") },
+    val actual: Int = Raise.fold(
+      { Raise.ensureNotNull(null, () => "error") },
       error => 43,
       value => 42
     )
@@ -42,7 +42,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "recover" should "return the value if it is not an error" in {
-    val actual = recover(
+    val actual = Raise.recover(
       { 42 },
       error => 43
     )
@@ -51,8 +51,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the recovery value if the value is an error" in {
-    val actual = recover(
-      { raise("error") },
+    val actual = Raise.recover(
+      { Raise.raise("error") },
       error => 43
     )
 
@@ -61,7 +61,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "rethrow the exception" in {
     assertThrows[RuntimeException] {
-      recover(
+      Raise.recover(
         { throw new RuntimeException("error") },
         error => 43
       )
@@ -69,7 +69,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "recover with catchBlock" should "return the value if it is not an error" in {
-    val actual = recover(
+    val actual = Raise.recover(
       { 42 },
       error => 43,
       ex => 44
@@ -79,8 +79,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the recovery value if the value is an error" in {
-    val actual = recover(
-      { raise("error") },
+    val actual = Raise.recover(
+      { Raise.raise("error") },
       error => 43,
       ex => 44
     )
@@ -89,7 +89,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the recovery value if the value is an exception" in {
-    val actual = recover(
+    val actual = Raise.recover(
       { throw new RuntimeException("error") },
       error => 43,
       ex => 44
@@ -99,7 +99,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "$catch" should "return the value if no exception is thrown" in {
-    val actual = $catch(
+    val actual = Raise.$catch(
       () => 42,
       ex => 43
     )
@@ -108,7 +108,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the recovery value if an exception is thrown" in {
-    val actual = $catch(
+    val actual = Raise.$catch(
       () => throw new RuntimeException("error"),
       ex => 43
     )
@@ -118,7 +118,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "rethrow any fatal exception" in {
     assertThrows[OutOfMemoryError] {
-      $catch(
+      Raise.$catch(
         () => throw new OutOfMemoryError("error"),
         ex => 43
       )
@@ -127,7 +127,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   "withError" should "return the value if it is not an error" in {
     val actual = either {
-      withError[Int, String, Int](s => s.length, { 42 })
+      Raise.withError[Int, String, Int](s => s.length, { 42 })
     }
 
     actual should be(Right(42))
@@ -135,7 +135,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "return the transformed error if the value is an error" in {
     val actual = either {
-      withError[Int, String, Int](s => s.length, { raise("error") })
+      Raise.withError[Int, String, Int](s => s.length, { Raise.raise("error") })
     }
 
     actual should be(Left(5))

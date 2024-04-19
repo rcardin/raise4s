@@ -9,7 +9,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   case object MyError extends Error
 
   "The fold function with four parameters" should "transform the result of the given Raise function" in {
-    val actual: String = fold(
+    val actual: String = Raise.fold(
       { 42 },
       throwable => "Error: " + throwable.getMessage,
       error => "Error: " + error,
@@ -20,7 +20,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "transform the result of the given Raise function when it throws an exception" in {
-    val actual: String = fold(
+    val actual: String = Raise.fold(
       { throw new RuntimeException("Boom!") },
       throwable => "Error: " + throwable.getMessage,
       error => "Error: " + error,
@@ -31,8 +31,8 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "transform the result of the given Raise function when it returns an error" in {
-    val actual: String = fold(
-      { raise(MyError) },
+    val actual: String = Raise.fold(
+      { Raise.raise(MyError) },
       throwable => "Error: " + throwable.getMessage,
       error => "Error: " + error,
       value => "Value: " + value
@@ -43,7 +43,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
   it should "rethrows any fatal exception" in {
     assertThrows[OutOfMemoryError] {
-      fold(
+      Raise.fold(
         { throw new OutOfMemoryError("Boom!") },
         throwable => "Error: " + throwable.getMessage,
         error => "Error: " + error,
@@ -53,7 +53,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   "The fold function without the 'catch' block " should "transform the result of the given Raise function" in {
-    val actual: String = fold(
+    val actual: String = Raise.fold(
       { 42 },
       error => "Error: " + error,
       value => "Value: " + value
@@ -63,8 +63,8 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "transform the result of the given Raise function when it returns an error" in {
-    val actual: String = fold(
-      { raise(MyError) },
+    val actual: String = Raise.fold(
+      { Raise.raise(MyError) },
       error => "Error: " + error,
       value => "Value: " + value
     )
@@ -74,7 +74,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
   it should "rethrows any exception" in {
     assertThrows[RuntimeException] {
-      fold(
+      Raise.fold(
         { throw new RuntimeException("Boom!") },
         error => "Error: " + error,
         value => "Value: " + value
