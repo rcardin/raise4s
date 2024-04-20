@@ -31,7 +31,7 @@ object RaiseTryPredef:
       case Success(a) => a
       case Failure(e) => tryRaise.raise(e)
 
-def $try[A](block: Raise[Throwable] ?=> A): Try[A] =
+def asTry[A](block: Raise[Throwable] ?=> A): Try[A] =
   fold(
     {
       given tryRaise: Raise[Throwable] = new DefaultRaise()

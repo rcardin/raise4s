@@ -171,7 +171,7 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val actual = $catch(
+    * val actual = catching(
     *   () => throw new RuntimeException("error"),
     *   ex => 43
     * )
@@ -187,7 +187,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def $catch[A](block: () => A, catchBlock: Throwable => A): A =
+  def catching[A](block: () => A, catchBlock: Throwable => A): A =
     try block()
     catch
       case NonFatal(e) => catchBlock(e)
@@ -369,7 +369,7 @@ object Raise {
    * {{{
    * val one: Try[Int]     = Success(1)
    * val failure: Try[Int] = Failure(new Exception("error"))
-   * val actual = $try {
+   * val actual = asTry {
    *   val x = one.bind()
    *   val y = recover({ failure.bind() }, { _ => 1 })
    *   x + y
@@ -381,5 +381,5 @@ object Raise {
    * @tparam A The type of the value returned by the computation
    * @return An [[Try]] representing the outcome of the computation
    */
-  def $try[A](block: Raise[Throwable] ?=> A): Try[A] = in.rcard.raise4s.$try(block)
+  def asTry[A](block: Raise[Throwable] ?=> A): Try[A] = in.rcard.raise4s.asTry(block)
 }

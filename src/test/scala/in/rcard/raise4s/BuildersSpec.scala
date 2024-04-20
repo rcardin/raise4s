@@ -60,13 +60,13 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
   }
 
   "The try builder" should "create a Failure instance" in {
-    val actual = Raise.$try { Raise.raise(new Exception("error")) }
+    val actual = Raise.asTry { Raise.raise(new Exception("error")) }
 
     actual.isFailure should be(true)
   }
 
   it should "create a Success instance" in {
-    val actual = Raise.$try { "success" }
+    val actual = Raise.asTry { "success" }
 
     actual should be(Success("success"))
   }
@@ -75,7 +75,7 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
     val one: Try[Int]     = Success(1)
     val failure: Try[Int] = Failure(new Exception("error"))
 
-    val actual = Raise.$try {
+    val actual = Raise.asTry {
       val x = one.bind()
       val y = Raise.recover({ failure.bind() }, { _ => 1 })
       x + y
