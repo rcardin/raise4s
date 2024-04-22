@@ -155,6 +155,52 @@ def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
   }
 ```
 
+### Zipping Errors
+
+As we said, the `mapOrAccumulate` function allows the combination of the results of a transformation applied to a collection of elements of the same type. What if we want to combine transformations applied to objects of different types?
+
+A classic example is the validation during the creation of an object. Say we want a `Salary` type with amount and currency information:
+
+```scala 3
+case class Salary(amount: Double, currency: String)
+```
+
+Now, we need to create a hierarchy of the possible logical typed errors we can have while creating a Salary object. We’ll check for the following two errors:
+
+ 1. The amount must be greater than zero
+ 2. The currency must be made of three capital letters
+
+We define the following hierarchy of types to represent the above errors:
+
+```scala 3
+sealed trait SalaryError
+case object NegativeAmount extends SalaryError
+case class InvalidCurrency(message: String) extends SalaryError
+```
+
+In general, we want to avoid the creation of invalid objects. To do so, we can define what we call a smart constructor. Smart constructors are factories that look like regular constructors but perform validations and generally return the valid object or some typed error. The smart constructor must perform all the needed validation on input data before creating a concrete instance of the object.
+
+We can’t use the `mapOrAccumulate` function we previously saw because we don’t have a list of objects of the same type as input. Fortunately, the library provides the `zipOrAccumulate` function, which we need.
+
+```scala 3
+object Salary {
+  def apply(amount: Double, currency: String): Salary raises List[SalaryError] = {
+    Raise.zipOrAccumulate(
+      { Raise.ensure(amount >= 0.0, () => NegativeAmount) }, {
+        Raise.ensure(
+          currency != null && currency.matches("[A-Z]{3}"),
+          () => InvalidCurrency("Currency must be not empty and valid")
+        )
+      }
+    ) { (_, _) =>
+      Salary(amount, currency)
+    }
+  }
+}
+```
+
+Many different versions of the function differ in the number of input parameters. The maximum number of single input parameters is 9. If we need more, we must apply the function recursively multiple times.
+
 ### Conversion to Wrapped Types
 
 What if we want to convert a computation in the `Raise[E]` context to a function returning an `Either[E, A]`, a `Try[A]`, an `Option[A]`? Well, nothing is more straightforward than that. 
