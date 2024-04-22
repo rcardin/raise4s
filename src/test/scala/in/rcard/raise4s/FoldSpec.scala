@@ -85,7 +85,7 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
   "mapOrAccumulate" should "map all the element of the iterable" in {
     val block: List[Int] raises List[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) {
-      _ + 1
+      value1 => value1 + 1
     }
 
     val actual = Raise.fold(
@@ -143,5 +143,53 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     )
 
     actual shouldBe List("2", "4")
+  }
+
+  "zipOrAccumulate" should "zip 9 elements" in {
+    val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+      { 1 },
+      { 2 },
+      { 3 },
+      { 4 },
+      { 5 },
+      { 6 },
+      { 7 },
+      { 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual should be(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
+  }
+
+  it should "accumulate errors" in {
+    val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+      { 1 },
+      { if (true) Raise.raise("2") else 2 },
+      { 3 },
+      { if (true) Raise.raise("4") else 4 },
+      { 5 },
+      { if (true) Raise.raise("6") else 6 },
+      { 7 },
+      { if (true) Raise.raise("8") else 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual should be(List("2", "4", "6", "8"))
   }
 }
