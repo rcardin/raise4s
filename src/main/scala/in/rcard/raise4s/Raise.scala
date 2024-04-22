@@ -171,7 +171,7 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val actual = $catch(
+    * val actual = catching(
     *   () => throw new RuntimeException("error"),
     *   ex => 43
     * )
@@ -187,7 +187,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def $catch[A](block: () => A, catchBlock: Throwable => A): A =
+  def catching[A](block: () => A, catchBlock: Throwable => A): A =
     try block()
     catch
       case NonFatal(e) => catchBlock(e)
@@ -266,7 +266,7 @@ object Raise {
       catchBlock: (throwable: Throwable) => B,
       recover: (error: Error) => B,
       transform: (value: A) => B
-  ): B = in.rcard.raise4s.fold(block, catchBlock, recover, transform)
+  ): B = _fold(block, catchBlock, recover, transform)
 
   /** The most general way to execute a computation using [[Raise]]. Depending on the outcome of the
     * `block`, one of the two continuations is run:
@@ -302,7 +302,7 @@ object Raise {
       block: Raise[Error] ?=> A,
       recover: (error: Error) => B,
       transform: (value: A) => B
-  ): B = in.rcard.raise4s.fold(block, recover, transform)
+  ): B = _fold(block, ex => throw ex, recover, transform)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Either]].
     *   - [[Right]] represents success,
@@ -335,7 +335,7 @@ object Raise {
     * @return
     *   An [[Either]] representing the outcome of the computation
     */
-  def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] = in.rcard.raise4s.either(block)
+  def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] = _either(block)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Option]].
     *   - [[Some]] represents success,
@@ -361,7 +361,7 @@ object Raise {
     * @return
     *   An [[Option]] representing the outcome of the computation
     */
-  def option[A](block: Raise[None.type] ?=> A): Option[A] = in.rcard.raise4s.option(block)
+  def option[A](block: Raise[None.type] ?=> A): Option[A] = _option(block)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Try]].
     *
@@ -369,7 +369,7 @@ object Raise {
     * {{{
     * val one: Try[Int]     = Success(1)
     * val failure: Try[Int] = Failure(new Exception("error"))
-    * val actual = $try {
+    * val actual = asTry {
     *   val x = one.bind()
     *   val y = recover({ failure.bind() }, { _ => 1 })
     *   x + y
@@ -384,10 +384,10 @@ object Raise {
     * @return
     *   An [[Try]] representing the outcome of the computation
     */
-  def $try[A](block: Raise[Throwable] ?=> A): Try[A] = in.rcard.raise4s.$try(block)
+  def asTry[A](block: Raise[Throwable] ?=> A): Try[A] = _asTry(block)
 
   /** Accumulate the errors obtained by executing the `transform` over every element of `iterable`.
-   * 
+   *
    * <h2>Example</h2>
    * {{{
    * val block: List[Int] raises List[String] = Raise.mapOrAccumulate(
@@ -401,7 +401,7 @@ object Raise {
    * )
    * actual shouldBe List(2, 3, 4, 5, 6)
    * }}}
-    * 
+    *
     * @param iterable The collection of elements to transform
     * @param transform The transformation to apply to each element that can raise an error of type `Error`
     * @param r The Raise context

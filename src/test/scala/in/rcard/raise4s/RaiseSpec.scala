@@ -98,8 +98,8 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     actual should be(44)
   }
 
-  "$catch" should "return the value if no exception is thrown" in {
-    val actual = Raise.$catch(
+  "catching" should "return the value if no exception is thrown" in {
+    val actual = Raise.catching(
       () => 42,
       ex => 43
     )
@@ -108,7 +108,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the recovery value if an exception is thrown" in {
-    val actual = Raise.$catch(
+    val actual = Raise.catching(
       () => throw new RuntimeException("error"),
       ex => 43
     )
@@ -118,7 +118,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "rethrow any fatal exception" in {
     assertThrows[OutOfMemoryError] {
-      Raise.$catch(
+      Raise.catching(
         () => throw new OutOfMemoryError("error"),
         ex => 43
       )
@@ -126,7 +126,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "withError" should "return the value if it is not an error" in {
-    val actual = either {
+    val actual = Raise.either {
       Raise.withError[Int, String, Int](s => s.length, { 42 })
     }
 
@@ -134,7 +134,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "return the transformed error if the value is an error" in {
-    val actual = either {
+    val actual = Raise.either {
       Raise.withError[Int, String, Int](s => s.length, { Raise.raise("error") })
     }
 
