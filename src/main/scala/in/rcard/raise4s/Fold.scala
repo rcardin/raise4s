@@ -33,8 +33,7 @@ def fold[A, B, Error](
     transform: (value: A) => B
 ): B = _fold(block, ex => throw ex, recover, transform)
 
-private[raise4s] def mapOrAccumulate[Error, A, B](
-    iterable: Iterable[A],
+private[raise4s] def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
     transform: Raise[Error] ?=> A => B
 )(using r: Raise[List[Error]]): List[B] =
   val errors  = collection.mutable.ArrayBuffer.empty[Error]

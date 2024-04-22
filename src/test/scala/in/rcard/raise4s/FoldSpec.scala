@@ -84,10 +84,9 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   "mapOrAccumulate" should "map all the element of the iterable" in {
-    val block: List[Int] raises List[String] = Raise.mapOrAccumulate(
-      List(1, 2, 3, 4, 5),
+    val block: List[Int] raises List[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) {
       _ + 1
-    )
+    }
 
     val actual = Raise.fold(
       block,
@@ -99,16 +98,13 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "accumulate all the errors" in {
-    val block: List[Int] raises List[String] = Raise.mapOrAccumulate(
-      List(1, 2, 3, 4, 5),
-      { value =>
-        if (value % 2 == 0) {
-          Raise.raise(value.toString)
-        } else {
-          value
-        }
+    val block: List[Int] raises List[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
       }
-    )
+    }
 
     val actual = Raise.fold(
       block,
@@ -132,15 +128,13 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "accumulate all the errors on the receiver" in {
-    val block: List[Int] raises List[String] = List(1, 2, 3, 4, 5).mapOrAccumulate(
-      { value =>
-        if (value % 2 == 0) {
-          Raise.raise(value.toString)
-        } else {
-          value
-        }
+    val block: List[Int] raises List[String] = List(1, 2, 3, 4, 5).mapOrAccumulate { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
       }
-    )
+    }
 
     val actual = Raise.fold(
       block,
