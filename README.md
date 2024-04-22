@@ -129,6 +129,32 @@ val usdAmount: Double =
   Raise.recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
 ```
 
+### Accumulating Errors
+
+What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids and we want to retrieve all the associated users.
+
+```scala 3
+def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound]
+```
+
+As you might guess, the library gives us a dedicated function to execute a transformation on a list of values and accumulate the errors in a List[Error]. The function is called `mapOrAccumulate`: 
+
+```scala 3
+def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
+  Raise.mapOrAccumulate(ids) { id =>
+    findUserById(id)
+  }
+```
+
+If at least one error is raised, the `mapOrAccumulate` function will accumulate all the errors in a List[Error]. If no error is raised, the function will return a List[User]. There is also a version of the `mapOrAccumulate` function defined as extension method of any `Iterable[A]` type:
+
+```scala 3
+def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
+  ids.mapOrAccumulate { id =>
+    findUserById(id)
+  }
+```
+
 ### Conversion to Wrapped Types
 
 What if we want to convert a computation in the `Raise[E]` context to a function returning an `Either[E, A]`, a `Try[A]`, an `Option[A]`? Well, nothing is more straightforward than that. 
