@@ -2,6 +2,7 @@
 ![Maven Central](https://img.shields.io/maven-central/v/in.rcard/raise4s_3)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/rcardin/raise4s)
 [![javadoc](https://javadoc.io/badge2/in.rcard/raise4s_3/javadoc.svg)](https://javadoc.io/doc/in.rcard/raise4s_3)
+[![codecov](https://codecov.io/gh/rcardin/raise4s/graph/badge.svg?token=V0IUTWZEPO)](https://codecov.io/gh/rcardin/raise4s)
 
 # raise4s
 Porting of the Raise DSL from the Arrow Kt Kotlin library
