@@ -1,5 +1,6 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.Raise.catching
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -139,5 +140,29 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     }
 
     actual should be(Left(5))
+  }
+
+  "catching as an extension method" should "return the value if no exception is thrown" in {
+    val actual = 42.catching { ex =>
+      43
+    }
+
+    actual should be(42)
+  }
+
+  it should "return the recovery value if an exception is thrown" in {
+    val actual = { throw new RuntimeException("error") }.catching { ex =>
+      43
+    }
+
+    actual should be(43)
+  }
+
+  it should "rethrow any fatal exception" in {
+    assertThrows[OutOfMemoryError] {
+      { throw new OutOfMemoryError("error") }.catching { ex =>
+        43
+      }
+    }
   }
 }

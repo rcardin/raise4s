@@ -1,5 +1,6 @@
 package in.rcard.raise4s
 
+import scala.annotation.targetName
 import scala.util.Try
 import scala.util.control.{ControlThrowable, NoStackTrace, NonFatal}
 
@@ -18,6 +19,10 @@ infix type raises[R, Error] = Raise[Error] ?=> R
 /** Defines the main scope of the functions available on the `Raise` context.
   */
 object Raise {
+
+  extension [A](a: => A)
+    @targetName("catchingThis")
+    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a, catchBlock)
 
   /** Raises a _logical failure_ of type `Error`. This function behaves like a <em>return
     * statement</em>, immediately short-circuiting and terminating the computation.
