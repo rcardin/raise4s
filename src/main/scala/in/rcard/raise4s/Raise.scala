@@ -21,6 +21,8 @@ infix type raises[R, Error] = Raise[Error] ?=> R
 object Raise {
 
   extension [A](a: => A)
+    /** Extensions method version of the [[Raise.catching]] function.
+      */
     @targetName("catchingThis")
     def catching(catchBlock: Throwable => A): A = Raise.catching(() => a, catchBlock)
 
