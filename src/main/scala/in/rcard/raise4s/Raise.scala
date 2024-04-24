@@ -205,7 +205,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual = either {
-    *   withError[Int, String, Int](s => s.length, { raise("error") })
+    *   withError[Int, String, Int](s => s.length) { raise("error") }
     * }
     * actual should be(Left(5))
     * }}}
@@ -225,8 +225,7 @@ object Raise {
     * @return
     *   The result of the `block`
     */
-  def withError[Error, OtherError, A](
-      transform: OtherError => Error,
+  def withError[Error, OtherError, A](transform: OtherError => Error)(
       block: Raise[OtherError] ?=> A
   )(using r: Raise[Error]): A =
     recover(block, otherError => r.raise(transform(otherError)))
