@@ -112,9 +112,9 @@ def findUserByIdWithEx(id: String): User =
 
 val maybeUser: Either[Error, User] =
   Raise.either:
-    Raise.catching[User](() => findUserByIdWithEx("42"), {
+    Raise.catching[User](() => findUserByIdWithEx("42")) {
       case _: IllegalArgumentException => Raise.raise(UserNotFound("42"))
-    })
+    }
 ```
 
 There is also a version of the `catching` function defined as an extension method of any `A` type. The above code can be rewritten as follows:

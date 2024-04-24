@@ -91,29 +91,20 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
   }
 
   "catching" should "return the value if no exception is thrown" in {
-    val actual = Raise.catching(
-      () => 42,
-      ex => 43
-    )
+    val actual = Raise.catching(() => 42) { ex => 43 }
 
     actual should be(42)
   }
 
   it should "return the recovery value if an exception is thrown" in {
-    val actual = Raise.catching(
-      () => throw new RuntimeException("error"),
-      ex => 43
-    )
+    val actual = Raise.catching(() => throw new RuntimeException("error")) { ex => 43 }
 
     actual should be(43)
   }
 
   it should "rethrow any fatal exception" in {
     assertThrows[OutOfMemoryError] {
-      Raise.catching(
-        () => throw new OutOfMemoryError("error"),
-        ex => 43
-      )
+      Raise.catching(() => throw new OutOfMemoryError("error")) { ex => 43 }
     }
   }
 

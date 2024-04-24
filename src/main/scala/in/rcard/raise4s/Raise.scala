@@ -21,8 +21,9 @@ infix type raises[R, Error] = Raise[Error] ?=> R
 object Raise {
 
   extension [A](a: => A)
+    //noinspection NoTailRecursionAnnotation
     @targetName("catchingThis")
-    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a, catchBlock)
+    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a)(catchBlock)
 
   /** Raises a _logical failure_ of type `Error`. This function behaves like a <em>return
     * statement</em>, immediately short-circuiting and terminating the computation.
@@ -191,7 +192,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def catching[A](block: () => A, catchBlock: Throwable => A): A =
+  def catching[A](block: () => A)(catchBlock: Throwable => A): A =
     try block()
     catch
       case NonFatal(e) => catchBlock(e)
