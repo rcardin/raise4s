@@ -196,11 +196,11 @@ We canâ€™t use the `mapOrAccumulate` function we previously saw because we donâ€
 object Salary {
   def apply(amount: Double, currency: String): Salary raises List[SalaryError] = {
     Raise.zipOrAccumulate(
-      { Raise.ensure(amount >= 0.0, () => NegativeAmount) }, {
-        Raise.ensure(
-          currency != null && currency.matches("[A-Z]{3}"),
-          () => InvalidCurrency("Currency must be not empty and valid")
-        )
+      { Raise.ensure(amount >= 0.0)(NegativeAmount) },
+      {
+        Raise.ensure(currency != null && currency.matches("[A-Z]{3}")) {
+          InvalidCurrency("Currency must be not empty and valid")
+        }
       }
     ) { (_, _) =>
       Salary(amount, currency)

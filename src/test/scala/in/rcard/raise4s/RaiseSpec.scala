@@ -8,7 +8,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   "ensure" should "return Unit if the given condition is met" in {
     val actual: Int = Raise.fold(
-      { Raise.ensure(42 > 0, () => "error") },
+      { Raise.ensure(42 > 0) { "error" } },
       error => 43,
       value => 42
     )
@@ -17,7 +17,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "return the error if the condition is not met" in {
     val actual: Int = Raise.fold(
-      { Raise.ensure(42 < 0, () => "error") },
+      { Raise.ensure(42 < 0) { "error" } },
       error => 43,
       value => 42
     )

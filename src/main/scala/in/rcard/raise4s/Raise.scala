@@ -58,7 +58,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual: Int = fold(
-    *   { ensure(42 < 0, () => "error") },
+    *   { ensure(42 < 0) { "error" },
     *   error => 43,
     *   value => 42
     * )
@@ -74,8 +74,8 @@ object Raise {
     * @tparam Error
     *   The type of the logical error
     */
-  def ensure[Error](condition: Boolean, raise: () => Error)(using r: Raise[Error]): Unit =
-    if !condition then r.raise(raise())
+  def ensure[Error](condition: Boolean)(raise: => Error)(using r: Raise[Error]): Unit =
+    if !condition then r.raise(raise)
 
   /** Ensures that the `value` is not null; otherwise, [[Raise.raise]]s a logical failure of type
     * `Error`.
