@@ -117,6 +117,14 @@ val maybeUser: Either[Error, User] =
     })
 ```
 
+There is also a version of the `catching` function defined as an extension method of any `A` type. The above code can be rewritten as follows:
+
+```scala 3
+findUserByIdWithEx("42").catching {
+  case _: IllegalArgumentException => Raise.raise(UserNotFound("42"))
+}
+```
+
 We will see the `either` function in a moment. As we can see, there’s nothing special with the `catching` function. It just catches the exception and calls the catch lambda with the exception. The `catching` function lets the fatal exception bubble up.
 
 It’s a different story if we want to recover or react to a typed error. In this case, we can use the `recover` function:
