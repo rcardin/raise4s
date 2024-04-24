@@ -85,7 +85,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual: Int = fold(
-    *   { ensureNotNull(null, () => "error") },
+    *   { ensureNotNull(null) { "error" } },
     *   error => 43,
     *   value => 42
     * )
@@ -105,8 +105,8 @@ object Raise {
     * @return
     *   The value if it is not null
     */
-  def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error]): B =
-    if value == null then r.raise(raise())
+  def ensureNotNull[B, Error](value: B)(raise: => Error)(using r: Raise[Error]): B =
+    if value == null then r.raise(raise)
     else value
 
   /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type

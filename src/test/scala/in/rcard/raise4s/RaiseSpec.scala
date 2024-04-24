@@ -26,7 +26,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   "ensureNotNull" should "return the value if it is not null" in {
     val actual: Int = Raise.fold(
-      { Raise.ensureNotNull(42, () => "error") },
+      { Raise.ensureNotNull(42) { "error" } },
       error => 43,
       identity
     )
@@ -35,7 +35,7 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "return the error if the value is null" in {
     val actual: Int = Raise.fold(
-      { Raise.ensureNotNull(null, () => "error") },
+      { Raise.ensureNotNull(null) { "error" } },
       error => 43,
       value => 42
     )
