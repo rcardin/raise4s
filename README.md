@@ -136,7 +136,7 @@ def convertToUsd(amount: Double, currency: String): Double raises NegativeAmount
   else amount * 1.2
 
 val usdAmount: Double =
-  Raise.recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
+  Raise.recover({ convertToUsd(-1, "EUR") }) { case NegativeAmount(amount) => 0.0D }
 ```
 
 ### Accumulating Errors

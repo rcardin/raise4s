@@ -1,6 +1,6 @@
 package in.rcard.raise4s
 
-import in.rcard.raise4s.RaiseAnyPredef.{succeed, raise}
+import in.rcard.raise4s.RaiseAnyPredef.{raise, succeed}
 import in.rcard.raise4s.RaiseEitherPredef.bind
 import in.rcard.raise4s.RaiseOptionPredef.bind
 import in.rcard.raise4s.RaiseTryPredef.bind
@@ -25,12 +25,9 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
     val actual = Raise.either {
       val x = one.bind()
-      val y = Raise.recover(
-        {
-          left.bind()
-        },
-        { _ => 1 }
-      )
+      val y = Raise.recover({
+        left.bind()
+      }) { _ => 1 }
       x + y
     }
 
@@ -51,7 +48,7 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
     val actual = Raise.option {
       val x = some.bind()
-      val y = Raise.recover({ none.bind() }, { _ => 1 })
+      val y = Raise.recover({ none.bind() }) { _ => 1 }
       x + y
     }
 
@@ -77,7 +74,7 @@ class BuildersSpec extends AnyFlatSpec with Matchers {
 
     val actual = Raise.asTry {
       val x = one.bind()
-      val y = Raise.recover({ failure.bind() }, { _ => 1 })
+      val y = Raise.recover({ failure.bind() }) { _ => 1 }
       x + y
     }
 

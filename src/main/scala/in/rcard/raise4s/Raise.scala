@@ -114,10 +114,9 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val actual = recover(
-    *   { raise("error") },
+    * val actual = recover({ raise("error") }) {
     *   error => 43
-    * )
+    * }
     * actual should be(43)
     * }}}
     *
@@ -132,7 +131,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def recover[Error, A](block: Raise[Error] ?=> A, recover: Error => A): A =
+  def recover[Error, A](block: Raise[Error] ?=> A)(recover: Error => A): A =
     fold(block, ex => throw ex, recover, identity)
 
   /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type
@@ -228,7 +227,7 @@ object Raise {
   def withError[Error, OtherError, A](transform: OtherError => Error)(
       block: Raise[OtherError] ?=> A
   )(using r: Raise[Error]): A =
-    recover(block, otherError => r.raise(transform(otherError)))
+    recover(block) { otherError => r.raise(transform(otherError)) }
 
   /** The most general way to execute a computation using [[Raise]]. Depending on the outcome of the
     * `block`, one of the three continuations is run:

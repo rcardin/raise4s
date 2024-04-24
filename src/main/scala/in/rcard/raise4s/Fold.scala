@@ -77,60 +77,33 @@ private[raise4s] def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
     action9: Raise[Error] ?=> I
 )(block: (A, B, C, D, E, F, G, H, I) => J)(using r: Raise[List[Error]]): J = {
   val errors = collection.mutable.ArrayBuffer.empty[Error]
-  val a: A = Raise.recover(
-    action1,
-    { newError =>
-      errors += newError; null.asInstanceOf[A]
-    }
-  )
-  val b: B = Raise.recover(
-    action2,
-    { newError =>
-      errors += newError; null.asInstanceOf[B]
-    }
-  )
-  val c: C = Raise.recover(
-    action3,
-    { newError =>
-      errors += newError; null.asInstanceOf[C]
-    }
-  )
-  val d: D = Raise.recover(
-    action4,
-    { newError =>
-      errors += newError; null.asInstanceOf[D]
-    }
-  )
-  val e: E = Raise.recover(
-    action5,
-    { newError =>
-      errors += newError; null.asInstanceOf[E]
-    }
-  )
-  val f: F = Raise.recover(
-    action6,
-    { newError =>
-      errors += newError; null.asInstanceOf[F]
-    }
-  )
-  val g: G = Raise.recover(
-    action7,
-    { newError =>
-      errors += newError; null.asInstanceOf[G]
-    }
-  )
-  val h: H = Raise.recover(
-    action8,
-    { newError =>
-      errors += newError; null.asInstanceOf[H]
-    }
-  )
-  val i: I = Raise.recover(
-    action9,
-    { newError =>
-      errors += newError; null.asInstanceOf[I]
-    }
-  )
+  val a: A = Raise.recover(action1) { newError =>
+    errors += newError; null.asInstanceOf[A]
+  }
+  val b: B = Raise.recover(action2) { newError =>
+    errors += newError; null.asInstanceOf[B]
+  }
+  val c: C = Raise.recover(action3) { newError =>
+    errors += newError; null.asInstanceOf[C]
+  }
+  val d: D = Raise.recover(action4) { newError =>
+    errors += newError; null.asInstanceOf[D]
+  }
+  val e: E = Raise.recover(action5) { newError =>
+    errors += newError; null.asInstanceOf[E]
+  }
+  val f: F = Raise.recover(action6) { newError =>
+    errors += newError; null.asInstanceOf[F]
+  }
+  val g: G = Raise.recover(action7) { newError =>
+    errors += newError; null.asInstanceOf[G]
+  }
+  val h: H = Raise.recover(action8) { newError =>
+    errors += newError; null.asInstanceOf[H]
+  }
+  val i: I = Raise.recover(action9) { newError =>
+    errors += newError; null.asInstanceOf[I]
+  }
   if errors.isEmpty then block(a, b, c, d, e, f, g, h, i)
   else r.raise(errors.toList)
 }
