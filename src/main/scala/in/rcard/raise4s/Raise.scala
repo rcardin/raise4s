@@ -22,9 +22,10 @@ object Raise {
 
   extension [A](a: => A)
     /** Extensions method version of the [[Raise.catching]] function.
-      */
+     */
+    //noinspection NoTailRecursionAnnotation
     @targetName("catchingThis")
-    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a, catchBlock)
+    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a)(catchBlock)
 
   /** Raises a _logical failure_ of type `Error`. This function behaves like a <em>return
     * statement</em>, immediately short-circuiting and terminating the computation.
@@ -60,7 +61,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual: Int = fold(
-    *   { ensure(42 < 0, () => "error") },
+    *   { ensure(42 < 0) { "error" },
     *   error => 43,
     *   value => 42
     * )
@@ -76,8 +77,8 @@ object Raise {
     * @tparam Error
     *   The type of the logical error
     */
-  def ensure[Error](condition: Boolean, raise: () => Error)(using r: Raise[Error]): Unit =
-    if !condition then r.raise(raise())
+  def ensure[Error](condition: Boolean)(raise: => Error)(using r: Raise[Error]): Unit =
+    if !condition then r.raise(raise)
 
   /** Ensures that the `value` is not null; otherwise, [[Raise.raise]]s a logical failure of type
     * `Error`.
@@ -87,7 +88,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual: Int = fold(
-    *   { ensureNotNull(null, () => "error") },
+    *   { ensureNotNull(null) { "error" } },
     *   error => 43,
     *   value => 42
     * )
@@ -107,8 +108,8 @@ object Raise {
     * @return
     *   The value if it is not null
     */
-  def ensureNotNull[B, Error](value: B, raise: () => Error)(using r: Raise[Error]): B =
-    if value == null then r.raise(raise())
+  def ensureNotNull[B, Error](value: B)(raise: => Error)(using r: Raise[Error]): B =
+    if value == null then r.raise(raise)
     else value
 
   /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type
@@ -116,10 +117,9 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val actual = recover(
-    *   { raise("error") },
+    * val actual = recover({ raise("error") }) {
     *   error => 43
-    * )
+    * }
     * actual should be(43)
     * }}}
     *
@@ -134,7 +134,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def recover[Error, A](block: Raise[Error] ?=> A, recover: Error => A): A =
+  def recover[Error, A](block: Raise[Error] ?=> A)(recover: Error => A): A =
     fold(block, ex => throw ex, recover, identity)
 
   /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type
@@ -194,7 +194,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def catching[A](block: () => A, catchBlock: Throwable => A): A =
+  def catching[A](block: () => A)(catchBlock: Throwable => A): A =
     try block()
     catch
       case NonFatal(e) => catchBlock(e)
@@ -207,7 +207,7 @@ object Raise {
     * <h2>Example</h2>
     * {{{
     * val actual = either {
-    *   withError[Int, String, Int](s => s.length, { raise("error") })
+    *   withError[Int, String, Int](s => s.length) { raise("error") }
     * }
     * actual should be(Left(5))
     * }}}
@@ -227,11 +227,10 @@ object Raise {
     * @return
     *   The result of the `block`
     */
-  def withError[Error, OtherError, A](
-      transform: OtherError => Error,
+  def withError[Error, OtherError, A](transform: OtherError => Error)(
       block: Raise[OtherError] ?=> A
   )(using r: Raise[Error]): A =
-    recover(block, otherError => r.raise(transform(otherError)))
+    recover(block) { otherError => r.raise(transform(otherError)) }
 
   /** The most general way to execute a computation using [[Raise]]. Depending on the outcome of the
     * `block`, one of the three continuations is run:

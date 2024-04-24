@@ -112,9 +112,9 @@ def findUserByIdWithEx(id: String): User =
 
 val maybeUser: Either[Error, User] =
   Raise.either:
-    Raise.catching[User](() => findUserByIdWithEx("42"), {
+    Raise.catching[User](() => findUserByIdWithEx("42")) {
       case _: IllegalArgumentException => Raise.raise(UserNotFound("42"))
-    })
+    }
 ```
 
 There is also a version of the `catching` function defined as an extension method of any `A` type. The above code can be rewritten as follows:
@@ -136,7 +136,7 @@ def convertToUsd(amount: Double, currency: String): Double raises NegativeAmount
   else amount * 1.2
 
 val usdAmount: Double =
-  Raise.recover({ convertToUsd(-1, "EUR") }, { case NegativeAmount(amount) => 0.0D })
+  Raise.recover({ convertToUsd(-1, "EUR") }) { case NegativeAmount(amount) => 0.0D }
 ```
 
 ### Accumulating Errors
@@ -196,11 +196,11 @@ We canâ€™t use the `mapOrAccumulate` function we previously saw because we donâ€
 object Salary {
   def apply(amount: Double, currency: String): Salary raises List[SalaryError] = {
     Raise.zipOrAccumulate(
-      { Raise.ensure(amount >= 0.0, () => NegativeAmount) }, {
-        Raise.ensure(
-          currency != null && currency.matches("[A-Z]{3}"),
-          () => InvalidCurrency("Currency must be not empty and valid")
-        )
+      { Raise.ensure(amount >= 0.0)(NegativeAmount) },
+      {
+        Raise.ensure(currency != null && currency.matches("[A-Z]{3}")) {
+          InvalidCurrency("Currency must be not empty and valid")
+        }
       }
     ) { (_, _) =>
       Salary(amount, currency)
