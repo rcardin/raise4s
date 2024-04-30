@@ -12,12 +12,14 @@ def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
 
 object RaiseEitherPredef:
   extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
+    @deprecated("Use the extension method 'value' defined in Bind scope instead", "0.0.5")
     def bind(): A = either match
       case Right(a) => a
       case Left(e)  => r.raise(e)
 
 object RaiseOptionPredef:
   extension [A](option: Option[A])(using optionRaise: Raise[None.type])
+    @deprecated("Use the extension method 'value' defined in Bind scope instead", "0.0.5")
     def bind(): A = option.getOrElse(Raise.raise(None))
 
 private[raise4s] def _option[A](block: Raise[None.type] ?=> A): Option[A] = {
