@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.Bind.value
+
 import scala.util.{Failure, Success, Try}
 
 private[raise4s] def _either[Error, A](block: Raise[Error] ?=> A): Either[Error, A] = {
@@ -13,14 +15,12 @@ def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] =
 object RaiseEitherPredef:
   extension [Error, A](either: Either[Error, A])(using r: Raise[Error])
     @deprecated("Use the extension method 'value' defined in Bind scope instead", "0.0.5")
-    def bind(): A = either match
-      case Right(a) => a
-      case Left(e)  => r.raise(e)
+    def bind(): A = either.value
 
 object RaiseOptionPredef:
   extension [A](option: Option[A])(using optionRaise: Raise[None.type])
     @deprecated("Use the extension method 'value' defined in Bind scope instead", "0.0.5")
-    def bind(): A = option.getOrElse(Raise.raise(None))
+    def bind(): A = option.value
 
 private[raise4s] def _option[A](block: Raise[None.type] ?=> A): Option[A] = {
   Raise.fold(
@@ -36,9 +36,8 @@ def option[A](block: Raise[None.type] ?=> A): Option[A] =
 
 object RaiseTryPredef:
   extension [A](tryValue: Try[A])(using tryRaise: Raise[Throwable])
-    def bind(): A = tryValue match
-      case Success(a) => a
-      case Failure(e) => tryRaise.raise(e)
+    @deprecated("Use the extension method 'value' defined in Bind scope instead", "0.0.5")
+    def bind(): A = tryValue.value
 
 private[raise4s] def _asTry[A](block: Raise[Throwable] ?=> A): Try[A] = {
   Raise.fold(
