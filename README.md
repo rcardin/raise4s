@@ -234,25 +234,27 @@ val maybeUserNameInUpperCase: Either[Error, String] =
 
 Please praise the simplicity and absence of boilerplate code, like calls to `map` functions or when expressions. This is the power of Scala direct style.
 
-It’s also possible to make the backward conversion from an `Either[E, A]` to a `Raise[E]` using the `bind` function:
+It’s also possible to make the backward conversion from an `Either[E, A]` to a `Raise[E]` using the `value` function:
 
 ```scala 3
-val userNameInUpperCaseRaiseLambda: Raise[Error] ?=> String = maybeUserNameInUpperCase.bind()
+val userNameInUpperCaseRaiseLambda: Raise[Error] ?=> String = maybeUserNameInUpperCase.value
 ```
 
-The `bind` function is very handful when we need to compose functions that return an `Either[E, A]`:
+The `value` function is very handful when we need to compose functions that return an `Either[E, A]`:
 
 ```scala 3
 val one = Right(1)
 val two = Right(2)
 val three = Raise.either {
-  val oneValue = one.bind()
-  val twoValue = two.bind()
+  val oneValue = one.value
+  val twoValue = two.value
   oneValue + twoValue
 }
 ```
 
-The `bind` function calls the `raise` function if the `Either` instance is a `Left`; otherwise, it returns the value wrapped by the `Right` instance. Despite the trivial logic implemented in the above example, it's a good example of how to compose functions that return an `Either[E, A]` using the Raise DSL without the use of any `flatMap` function.
+The `value` function calls the `raise` function if the `Either` instance is a `Left`; otherwise, it returns the value wrapped by the `Right` instance. Despite the trivial logic implemented in the above example, it's a good example of how to compose functions that return an `Either[E, A]` using the Raise DSL without the use of any `flatMap` function.
+
+Be aware that before version 0.0.5, the `value` function was called `bind()`.
 
 We can do the same with `Try[A]` and `Option[A]` using the `asTry` and `option` builders, respectively. Let's start with the `asTry` builder. In this case, the only available type of error is `Throwable`:
 
