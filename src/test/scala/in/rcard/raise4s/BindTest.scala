@@ -46,4 +46,17 @@ class BindTest extends AnyFlatSpec with Matchers {
 
     actual should be(Success(2))
   }
+
+  "List[Either[Error, A]].value" should "return a value if the list doesn't contain errors and raise an error otherwise" in {
+    val list: List[Either[String, Int]] = List(Right(1), Right(2), Right(3))
+    val listWithError: List[Either[String, Int]] = List(Right(1), Left("error"), Right(3))
+
+    val actual = Raise.either {
+      val x = list.value
+      val y = recover({ listWithError.value }) { _ => List(1) }
+      x.sum + y.sum
+    }
+
+    actual should be(Right(7))
+  }
 }

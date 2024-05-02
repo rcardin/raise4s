@@ -9,6 +9,9 @@ object Bind {
       case Right(value) => value
       case Left(error)  => Raise.raise(error)
     }
+    
+  extension [Error, A](list: List[Either[Error, A]])
+    def value(using Raise[Error]): List[A] = list.map(_.value)
 
   extension [A](option: Option[A])
     def value(using Raise[None.type]): A = option match {
