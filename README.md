@@ -254,6 +254,13 @@ val three = Raise.either {
 
 The `value` function calls the `raise` function if the `Either` instance is a `Left`; otherwise, it returns the value wrapped by the `Right` instance. Despite the trivial logic implemented in the above example, it's a good example of how to compose functions that return an `Either[E, A]` using the Raise DSL without the use of any `flatMap` function.
 
+A useful shortcut is available when we need to transform a `List[Either[E, A]]` into a `List[A] raises E`. The eventual raised error `E` is the first error found in the list of `Either[E, A]`:
+
+```scala 3
+val eitherList: List[Either[String, Int]] = List(Right(1), Left("error"), Right(3))
+val raiseList: List[Int] raises String = listWithError.value
+```
+
 Be aware that before version 0.0.5, the `value` function was called `bind()`.
 
 We can do the same with `Try[A]` and `Option[A]` using the `asTry` and `option` builders, respectively. Let's start with the `asTry` builder. In this case, the only available type of error is `Throwable`:
