@@ -22,16 +22,16 @@ object Raise {
 
   extension [A](a: => A)
     /** Extensions method version of the [[Raise.catching]] function.
-     */
-    //noinspection NoTailRecursionAnnotation
+      */
+    // noinspection NoTailRecursionAnnotation
     @targetName("catchingThis")
-    def catching(catchBlock: Throwable => A): A = Raise.catching(() => a)(catchBlock)
+    inline def catching(inline catchBlock: Throwable => A): A = Raise.catching(() => a)(catchBlock)
 
   /** Raises a _logical failure_ of type `Error`. This function behaves like a <em>return
     * statement</em>, immediately short-circuiting and terminating the computation.
     *
     * __Alternatives:__ Common ways to raise errors include: [[ensure]], [[ensureNotNull]], and
-    * [[RaiseEitherPredef.bind]]. Consider using them to make your code more concise and expressive.
+    * [[Bind.value]]. Consider using them to make your code more concise and expressive.
     *
     * __Handling raised errors:__ Refer to [[recover]]. <h2>Example</h2>
     * {{{
@@ -51,7 +51,7 @@ object Raise {
     * @tparam Error
     *   The type of the logical error
     */
-  def raise[Error](e: Error)(using raise: Raise[Error]): Nothing = raise.raise(e)
+  inline def raise[Error](e: Error)(using raise: Raise[Error]): Nothing = raise.raise(e)
 
   /** Ensures that the `condition` is met; otherwise, [[Raise.raise]]s a logical failure of type
     * `Error`.
@@ -77,7 +77,7 @@ object Raise {
     * @tparam Error
     *   The type of the logical error
     */
-  def ensure[Error](condition: Boolean)(raise: => Error)(using r: Raise[Error]): Unit =
+  inline def ensure[Error](condition: Boolean)(raise: => Error)(using r: Raise[Error]): Unit =
     if !condition then r.raise(raise)
 
   /** Ensures that the `value` is not null; otherwise, [[Raise.raise]]s a logical failure of type
@@ -108,7 +108,7 @@ object Raise {
     * @return
     *   The value if it is not null
     */
-  def ensureNotNull[B, Error](value: B)(raise: => Error)(using r: Raise[Error]): B =
+  inline def ensureNotNull[B, Error](value: B)(raise: => Error)(using r: Raise[Error]): B =
     if value == null then r.raise(raise)
     else value
 
@@ -134,8 +134,8 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def recover[Error, A](block: Raise[Error] ?=> A)(recover: Error => A): A =
-    fold(block, ex => throw ex, recover, identity)
+  inline def recover[Error, A](inline block: Raise[Error] ?=> A)(inline recover: Error => A): A =
+    Raise.fold(block, ex => throw ex, recover, identity)
 
   /** Execute the [[Raise]] context function resulting in `A` or any _logical error_ of type
     * `Error`, and `recover` by providing a transform `Error` into a fallback value of type `A`, or
@@ -166,12 +166,12 @@ object Raise {
     *   The result of the `block`, the fallback value from the `recover` function, or the fallback
     *   value from the `catchBlock` function
     */
-  def recover[Error, A](
-      block: Raise[Error] ?=> A,
-      recover: Error => A,
-      catchBlock: Throwable => A
+  inline def recover[Error, A](
+      inline block: Raise[Error] ?=> A,
+      inline recover: Error => A,
+      inline catchBlock: Throwable => A
   ): A =
-    fold(block, catchBlock, recover, identity)
+    Raise.fold(block, catchBlock, recover, identity)
 
   /** Allows safely catching [[NonFatal]] exceptions without capturing exceptions like
     * [[OutOfMemoryError]] or [[VirtualMachineError]], etc.
@@ -194,7 +194,7 @@ object Raise {
     * @return
     *   The result of the `block` or the fallback value
     */
-  def catching[A](block: () => A)(catchBlock: Throwable => A): A =
+  inline def catching[A](inline block: () => A)(inline catchBlock: Throwable => A): A =
     try block()
     catch
       case NonFatal(e) => catchBlock(e)
@@ -227,8 +227,8 @@ object Raise {
     * @return
     *   The result of the `block`
     */
-  def withError[Error, OtherError, A](transform: OtherError => Error)(
-      block: Raise[OtherError] ?=> A
+  inline def withError[Error, OtherError, A](inline transform: OtherError => Error)(
+      inline block: Raise[OtherError] ?=> A
   )(using r: Raise[Error]): A =
     recover(block) { otherError => r.raise(transform(otherError)) }
 
@@ -267,12 +267,20 @@ object Raise {
     * @tparam Error
     *   The type of the logical error that can be raised by the `block` lambda
     */
-  def fold[A, B, Error](
-      block: Raise[Error] ?=> A,
-      catchBlock: (throwable: Throwable) => B,
-      recover: (error: Error) => B,
-      transform: (value: A) => B
-  ): B = _fold(block, catchBlock, recover, transform)
+  inline def fold[A, B, Error](
+      inline block: Raise[Error] ?=> A,
+      inline catchBlock: (throwable: Throwable) => B,
+      inline recover: (error: Error) => B,
+      inline transform: (value: A) => B
+  ): B = {
+    given raise: Raise[Error] = new DefaultRaise
+
+    try transform(block)
+    catch
+      case Raised(error) => recover(error.asInstanceOf[Error])
+      case NonFatal(e)   => catchBlock(e)
+      case e: Throwable  => throw e
+  }
 
   /** The most general way to execute a computation using [[Raise]]. Depending on the outcome of the
     * `block`, one of the two continuations is run:
@@ -304,11 +312,12 @@ object Raise {
     * @tparam Error
     *   The type of the logical error that can be raised by the `block` lambda
     */
-  def fold[A, B, Error](
-      block: Raise[Error] ?=> A,
-      recover: (error: Error) => B,
-      transform: (value: A) => B
-  ): B = _fold(block, ex => throw ex, recover, transform)
+  //noinspection NoTailRecursionAnnotation
+  inline def fold[A, B, Error](
+      inline block: Raise[Error] ?=> A,
+      inline recover: (error: Error) => B,
+      inline transform: (value: A) => B
+  ): B = Raise.fold(block, ex => throw ex, recover, transform)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Either]].
     *   - [[Right]] represents success,
@@ -341,7 +350,7 @@ object Raise {
     * @return
     *   An [[Either]] representing the outcome of the computation
     */
-  def either[A, Error](block: Raise[Error] ?=> A): Either[Error, A] = _either(block)
+  inline def either[A, Error](inline block: Raise[Error] ?=> A): Either[Error, A] = _either(block)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Option]].
     *   - [[Some]] represents success,
@@ -367,7 +376,7 @@ object Raise {
     * @return
     *   An [[Option]] representing the outcome of the computation
     */
-  def option[A](block: Raise[None.type] ?=> A): Option[A] = _option(block)
+  inline def option[A](inline block: Raise[None.type] ?=> A): Option[A] = _option(block)
 
   /** Runs a computation `block` using [[Raise]], and return its outcome as [[Try]].
     *
@@ -390,7 +399,7 @@ object Raise {
     * @return
     *   An [[Try]] representing the outcome of the computation
     */
-  def asTry[A](block: Raise[Throwable] ?=> A): Try[A] = _asTry(block)
+  inline def asTry[A](inline block: Raise[Throwable] ?=> A): Try[A] = _asTry(block)
 
   /** Accumulate the errors obtained by executing the `transform` over every element of `iterable`.
     *
