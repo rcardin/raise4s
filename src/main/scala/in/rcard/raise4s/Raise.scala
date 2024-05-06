@@ -312,7 +312,7 @@ object Raise {
     * @tparam Error
     *   The type of the logical error that can be raised by the `block` lambda
     */
-  //noinspection NoTailRecursionAnnotation
+  // noinspection NoTailRecursionAnnotation
   inline def fold[A, B, Error](
       inline block: Raise[Error] ?=> A,
       inline recover: (error: Error) => B,
@@ -999,4 +999,25 @@ object Raise {
     )(
       block
     )
+
+  /** Execute a block of code that can raise a logical error and return the result or the error as a
+    * union type `Error | A`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val happyPathBlock: Int raises String = 42
+    * val result: String | Int = Runtime._run(happyPathBlock)
+    * result should be(42)
+    * }}}
+    *
+    * @param block
+    *   The block of code to execute that can raise an a logical type error
+    * @tparam Error
+    *   The type of the logical error that can be raised by the `block` lambda
+    * @tparam A
+    *   The type of the result of the execution of `block` lambda
+    * @return
+    *   The result of the execution of the `block` lambda or the logical error
+    */
+  def run[Error, A](block: Raise[Error] ?=> A): Error | A = Runtime._run(block)
 }
