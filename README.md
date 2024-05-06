@@ -104,6 +104,14 @@ The `fold` function “consumes” the context, creating a concrete instance of 
 
 There are other flavors of the `fold` function. So, please, be sure to check them in the documentation.
 
+For those who are not interested in handling possible exceptions raised by a function, there is a more straightforward function available, called `run`:
+
+```scala 3
+val maybeUser: Error | User = Raise.run {
+  findUserById("42")
+}
+```
+
 Please be aware that any exception thrown inside the `Raise[E]` context will bubble up and not be transformed automatically into a logical typed error. What if we want to convert the exception into a typed error? For example, we want to convert the `IllegalArgumentException` into a `UserNotFound`. Well, we can do it using a function called `catching`:
 
 ```scala 3
