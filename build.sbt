@@ -18,7 +18,7 @@ sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 name := "raise4s"
 //version := "0.0.1-SNAPSHOT"
-scalaVersion := "3.4.1"
+scalaVersion := "3.4.2"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.18" % Test
