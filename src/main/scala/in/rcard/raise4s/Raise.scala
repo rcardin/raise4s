@@ -435,6 +435,11 @@ object Raise {
       transform: Raise[Error] ?=> A => B
   )(using r: Raise[List[Error]]): List[B] = _mapOrAccumulate(iterable)(transform)
 
+
+  def mapOrAccumulate[Error, A, B](iterable: Iterable[A], combine: (Error, Error) => Error)(
+      transform: Raise[Error] ?=> A => B
+  )(using r: Raise[Error]): B = _mapOrAccumulate(iterable, combine)(transform)
+
   /** Accumulate the errors from running `action1`, and `action2`.
     *
     * <h2>Example</h2>
