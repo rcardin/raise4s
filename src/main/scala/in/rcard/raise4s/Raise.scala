@@ -1119,7 +1119,7 @@ object Raise {
       action6: Raise[Error] ?=> F
   )(
       block: (A, B, C, D, E, F) => G
-  )(using r: Raise[List[Error]]): G =
+  )(using r: Raise[Error]): G =
     _zipOrAccumulate(combine)(action1, action2, action3, action4, action5, action6, {}, {}, {}) {
       (a: A, b: B, c: C, d: D, e: E, f: F, _, _, _) => block(a, b, c, d, e, f)
     }
