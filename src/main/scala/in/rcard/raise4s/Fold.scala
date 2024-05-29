@@ -21,7 +21,7 @@ private[raise4s] def _mapOrAccumulate[Error, A, B](
 )(
     transform: Raise[Error] ?=> A => B
 )(using r: Raise[Error]): List[B] =
-  val errors = collection.mutable.ArrayBuffer.empty[Error]
+  val errors  = collection.mutable.ArrayBuffer.empty[Error]
   val results = collection.mutable.ArrayBuffer.empty[B]
   iterable.foreach(a =>
     Raise.fold(
@@ -94,7 +94,8 @@ private[raise4s] def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
 }
 
 private[raise4s] def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
-    combine: (Error, Error) => Error,
+    combine: (Error, Error) => Error
+)(
     action1: Raise[Error] ?=> A,
     action2: Raise[Error] ?=> B,
     action3: Raise[Error] ?=> C,
