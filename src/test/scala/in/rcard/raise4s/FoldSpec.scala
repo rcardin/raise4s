@@ -115,6 +115,42 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     actual shouldBe List("2", "4")
   }
 
+  case class MyError2(errors: List[String])
+  def combineErrors(error1: MyError2, error2: MyError2): MyError2 = 
+    MyError2(error1.errors ++ error2.errors)
+
+  "mapOrAccumulate with combine function" should "map all the element of the iterable" in {
+    val block: List[Int] raises MyError2 = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) {
+      value1 => value1 + 1
+    }
+
+    val actual = Raise.fold(
+      block,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors using the combine function" in {
+    val block: List[Int] raises MyError2 = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value =>
+      if (value % 2 == 0) {
+        Raise.raise(MyError2(List(value.toString)))
+      } else {
+        value
+      }
+    }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual shouldBe MyError2(List("2", "4"))
+  }
+
   "The extension function mapOrAccumulate" should "map all the element of the receiver" in {
     val block: List[Int] raises List[String] = List(1, 2, 3, 4, 5).mapOrAccumulate(_ + 1)
 
