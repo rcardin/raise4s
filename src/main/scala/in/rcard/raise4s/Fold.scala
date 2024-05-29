@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import scala.annotation.targetName
+
 private[raise4s] def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
     transform: Raise[Error] ?=> A => B
 )(using r: Raise[List[Error]]): List[B] =
@@ -14,6 +16,24 @@ private[raise4s] def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
   )
   if errors.isEmpty then results.toList
   else r.raise(errors.toList)
+
+private[raise4s] def _mapOrAccumulate[Error, A, B](
+    iterable: Iterable[A],
+    combine: (Error, Error) => Error
+)(
+    transform: Raise[Error] ?=> A => B
+)(using r: Raise[Error]): List[B] =
+  var errors  = collection.mutable.ArrayBuffer.empty[Error]
+  val results = collection.mutable.ArrayBuffer.empty[B]
+  iterable.foreach(a =>
+    Raise.fold(
+      transform(a),
+      error => errors += error,
+      result => results += result
+    )
+  )
+  if errors.isEmpty then results.toList
+  else r.raise(errors.reduce(combine))
 
 object RaiseIterableDef:
   extension [Error, A, B](iterable: Iterable[A])

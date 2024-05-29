@@ -435,6 +435,54 @@ object Raise {
       transform: Raise[Error] ?=> A => B
   )(using r: Raise[List[Error]]): List[B] = _mapOrAccumulate(iterable)(transform)
 
+  /** Transform every element of `iterable` using the given `transform`, or accumulate all the
+    * occurred errors using `combine`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class MyError2(val errors: List[String])
+    *   def combineErrors(error1: MyError2, error2: MyError2): MyError2 =
+    *     MyError2(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises MyError2 =
+    *   Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value =>
+    *       if (value % 2 == 0) {
+    *         Raise.raise(MyError2(List(value.toString)))
+    *       } else {
+    *         value
+    *       }
+    *     }
+    *
+    * val actual = Raise.fold(
+    *   block,
+    *   identity,
+    *   identity
+    * )
+    *
+    * actual shouldBe MyError2(List("2", "4"))
+    * }}}
+    *
+    * @param iterable
+    *   The collection of elements to transform
+    * @param combine
+    *   The function to combine the errors
+    * @param transform
+    *   The transformation to apply to each element that can raise an error of type `Error`
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised
+    * @tparam A
+    *   The type of the elements in the `iterable`
+    * @tparam B
+    *   The type of the transformed elements
+    * @return
+    *   A list of transformed elements
+    */
+  def mapOrAccumulate[Error, A, B](iterable: Iterable[A], combine: (Error, Error) => Error)(
+      transform: Raise[Error] ?=> A => B
+  )(using r: Raise[Error]): List[B] = _mapOrAccumulate(iterable, combine)(transform)
+
   /** Accumulate the errors from running `action1`, and `action2`.
     *
     * <h2>Example</h2>
