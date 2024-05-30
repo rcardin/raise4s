@@ -440,14 +440,14 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * case class MyError2(val errors: List[String])
-    *   def combineErrors(error1: MyError2, error2: MyError2): MyError2 =
-    *     MyError2(error1.errors ++ error2.errors)
+    * case class Errors(val errors: List[String])
+    *   def combineErrors(error1: Errors, error2: Errors): Errors =
+    *     Errors(error1.errors ++ error2.errors)
     *
-    * val block: List[Int] raises MyError2 =
+    * val block: List[Int] raises Errors =
     *   Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value =>
     *       if (value % 2 == 0) {
-    *         Raise.raise(MyError2(List(value.toString)))
+    *         Raise.raise(Errors(List(value.toString)))
     *       } else {
     *         value
     *       }
@@ -459,7 +459,7 @@ object Raise {
     *   identity
     * )
     *
-    * actual shouldBe MyError2(List("2", "4"))
+    * actual shouldBe Errors(List("2", "4"))
     * }}}
     *
     * @param iterable
@@ -1052,12 +1052,265 @@ object Raise {
 
   // ZIP COMBINE
 
+  /** Accumulate the errors from running `action1`, and `action2`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
+    *   { 1 },
+    *   { 2 }
+    * ) { case (a, b) =>
+    *   List(a, b)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2))
+    * }}}
+    *
+    * @param combine
+    *   The function to combine the errors
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  def zipOrAccumulate[Error, A, B, C](combine: (Error, Error) => Error)(
+      action1: Raise[Error] ?=> A,
+      action2: Raise[Error] ?=> B
+  )(block: (A, B) => C)(using r: Raise[Error]): C =
+    _zipOrAccumulate(combine)(action1, action2, {}, {}, {}, {}, {}, {}, {}) {
+      (a: A, b: B, _, _, _, _, _, _, _) =>
+        block(a, b)
+    }
+
+  /** Accumulate the errors from running `action1`, `action2`, and `action3`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 }
+    * ) { case (a, b, c) =>
+    *   List(a, b, c)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3))
+    * }}}
+    *
+    * @param combine
+    *   The function to combine the errors
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  def zipOrAccumulate[Error, A, B, C, D](combine: (Error, Error) => Error)(
+      action1: Raise[Error] ?=> A,
+      action2: Raise[Error] ?=> B,
+      action3: Raise[Error] ?=> C
+  )(
+      block: (A, B, C) => D
+  )(using r: Raise[Error]): D =
+    _zipOrAccumulate(combine)(action1, action2, action3, {}, {}, {}, {}, {}, {}) {
+      (a: A, b: B, c: C, _, _, _, _, _, _) =>
+        block(a, b, c)
+    }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, and `action4`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 }
+    * ) { case (a, b, c, d) =>
+    *   List(a, b, c, d)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4))
+    * }}}
+    *
+    * @param combine
+    *   The function to combine the errors
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  def zipOrAccumulate[Error, A, B, C, D, E](combine: (Error, Error) => Error)(
+      action1: Raise[Error] ?=> A,
+      action2: Raise[Error] ?=> B,
+      action3: Raise[Error] ?=> C,
+      action4: Raise[Error] ?=> D
+  )(
+      block: (A, B, C, D) => E
+  )(using r: Raise[Error]): E =
+    _zipOrAccumulate(combine)(action1, action2, action3, action4, {}, {}, {}, {}, {}) {
+      (a: A, b: B, c: C, d: D, _, _, _, _, _) =>
+        block(a, b, c, d)
+    }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, and `action5`.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 },
+    *   { 5 }
+    * ) { case (a, b, c, d, e) =>
+    *   List(a, b, c, d, e)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5))
+    * }}}
+    *
+    * @param combine
+    *   The function to combine the errors
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  def zipOrAccumulate[Error, A, B, C, D, E, F](combine: (Error, Error) => Error)(
+      action1: Raise[Error] ?=> A,
+      action2: Raise[Error] ?=> B,
+      action3: Raise[Error] ?=> C,
+      action4: Raise[Error] ?=> D,
+      action5: Raise[Error] ?=> E
+  )(
+      block: (A, B, C, D, E) => F
+  )(using r: Raise[Error]): F =
+    _zipOrAccumulate(combine)(action1, action2, action3, action4, action5, {}, {}, {}, {}) {
+      (a: A, b: B, c: C, d: D, e: E, _, _, _, _) => block(a, b, c, d, e)
+    }
+
   /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`, and
     * `action6`.
     *
     * <h2>Example</h2>
     * {{{
-    * val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
     *   { 1 },
     *   { 2 },
     *   { 3 },
@@ -1075,6 +1328,8 @@ object Raise {
     * actual should be(List(1, 2, 3, 4, 5, 6))
     * }}}
     *
+    * @param combine
+    *   The function to combine the errors
     * @param action1
     *   Code block to run on type `A`
     * @param action2
@@ -1129,7 +1384,11 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
     *   { 1 },
     *   { 2 },
     *   { 3 },
@@ -1148,6 +1407,8 @@ object Raise {
     * actual should be(List(1, 2, 3, 4, 5, 6, 7))
     * }}}
     *
+    * @param combine
+    *   The function to combine the errors
     * @param action1
     *   Code block to run on type `A`
     * @param action2
@@ -1217,7 +1478,11 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
     *   { 1 },
     *   { 2 },
     *   { 3 },
@@ -1237,6 +1502,8 @@ object Raise {
     * actual should be(List(1, 2, 3, 4, 5, 6, 7, 8))
     * }}}
     *
+    * @param combine
+    *   The function to combine the errors
     * @param action1
     *   Code block to run on type `A`
     * @param action2
@@ -1311,7 +1578,11 @@ object Raise {
     *
     * <h2>Example</h2>
     * {{{
-    * val block: List[Int] raises List[String] = Raise.zipOrAccumulate(
+    * case class Errors(errors: List[String])
+    * def combineErrors(error1: Errors, error2: Errors): Errors =
+    *   Errors(error1.errors ++ error2.errors)
+    *
+    * val block: List[Int] raises Errors = Raise.zipOrAccumulate(combineErrors)(
     *   { 1 },
     *   { 2 },
     *   { 3 },

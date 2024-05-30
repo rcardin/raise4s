@@ -116,13 +116,14 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   case class MyError2(errors: List[String])
-  def combineErrors(error1: MyError2, error2: MyError2): MyError2 = 
+  def combineErrors(error1: MyError2, error2: MyError2): MyError2 =
     MyError2(error1.errors ++ error2.errors)
 
   "mapOrAccumulate with combine function" should "map all the element of the iterable" in {
-    val block: List[Int] raises MyError2 = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) {
-      value1 => value1 + 1
-    }
+    val block: List[Int] raises MyError2 =
+      Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value1 =>
+        value1 + 1
+      }
 
     val actual = Raise.fold(
       block,
@@ -134,13 +135,14 @@ class FoldSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "accumulate all the errors using the combine function" in {
-    val block: List[Int] raises MyError2 = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value =>
-      if (value % 2 == 0) {
-        Raise.raise(MyError2(List(value.toString)))
-      } else {
-        value
+    val block: List[Int] raises MyError2 =
+      Raise.mapOrAccumulate(List(1, 2, 3, 4, 5), combineErrors) { value =>
+        if (value % 2 == 0) {
+          Raise.raise(MyError2(List(value.toString)))
+        } else {
+          value
+        }
       }
-    }
 
     val actual = Raise.fold(
       block,
@@ -227,5 +229,53 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     )
 
     actual should be(List("2", "4", "6", "8"))
+  }
+
+  "zipOrAccumulate with combine" should "zip 9 elements" in {
+    val block: List[Int] raises MyError2 = Raise.zipOrAccumulate(combineErrors)(
+      { 1 },
+      { 2 },
+      { 3 },
+      { 4 },
+      { 5 },
+      { 6 },
+      { 7 },
+      { 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual should be(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
+  }
+
+  it should "accumulate errors combining them" in {
+    val block: List[Int] raises MyError2 = Raise.zipOrAccumulate(combineErrors)(
+      { 1 },
+      { if (true) Raise.raise(MyError2(List("2"))) else 2 },
+      { 3 },
+      { if (true) Raise.raise(MyError2(List("4"))) else 4 },
+      { 5 },
+      { if (true) Raise.raise(MyError2(List("6"))) else 6 },
+      { 7 },
+      { if (true) Raise.raise(MyError2(List("8"))) else 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual should be(MyError2(List("2", "4", "6", "8")))
   }
 }
