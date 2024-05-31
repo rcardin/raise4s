@@ -1,5 +1,8 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s
+
+import java.lang.Runtime
 import scala.annotation.targetName
 import scala.util.Try
 import scala.util.control.{ControlThrowable, NoStackTrace, NonFatal}
@@ -1696,5 +1699,5 @@ object Raise {
     * @return
     *   The result of the execution of the `block` lambda or the logical error
     */
-  def run[Error, A](block: Raise[Error] ?=> A): Error | A = Runtime._run(block)
+  def run[Error, A](block: Raise[Error] ?=> A): Error | A = raise4s.Runtime._run(block)
 }
