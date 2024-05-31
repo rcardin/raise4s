@@ -1,6 +1,6 @@
 package in.rcard.raise4s
 
-import in.rcard.raise4s.Bind.value
+import Bind.value
 
 import scala.util.{Failure, Success, Try}
 
