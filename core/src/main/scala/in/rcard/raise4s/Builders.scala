@@ -40,7 +40,7 @@ private[raise4s] inline def _asTry[A](inline block: Raise[Throwable] ?=> A): Try
 }
 
 object RaiseAnyPredef:
-  extension [A](value: A) def succeed: Raise[Nothing] ?=> A = { value }
+  extension [A](value: A) inline def succeed: Raise[Nothing] ?=> A = { value }
 
   extension [Error](value: Error)(using raise: Raise[Error])
-    def raise[A]: Raise[Error] ?=> A = raise.raise(value)
+    inline def raise[A]: Raise[Error] ?=> A = raise.raise(value)
