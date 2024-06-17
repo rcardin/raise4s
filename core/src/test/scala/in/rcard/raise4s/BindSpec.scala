@@ -7,7 +7,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Failure, Success, Try}
 
-class BindTest extends AnyFlatSpec with Matchers {
+class BindSpec extends AnyFlatSpec with Matchers {
   "Either.value" should "return the value if it is not an error and raise an Error otherwise" in {
     val one: Either[Nothing, Int] = Right(1)
     val left: Either[String, Int] = Left("error")
