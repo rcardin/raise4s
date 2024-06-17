@@ -35,8 +35,16 @@ lazy val core = project
     libraryDependencies ++= commonDependencies
   )
 
+lazy val `cats-raise4s` = project
+  .dependsOn(core)
+  .settings(
+    name         := "cats-raise4s",
+    scalaVersion := scala3Version,
+    libraryDependencies ++= commonDependencies ++ `cats-raised4sDependencies`
+  )
+
 lazy val raise4s = (project in file("."))
-  .aggregate(core)
+  .aggregate(core, `cats-raise4s`)
   .settings(
     scalaVersion := scala3Version
   )
@@ -49,4 +57,8 @@ lazy val dependencies =
 
 lazy val commonDependencies = Seq(
   dependencies.scalatest % Test
+)
+
+lazy val `cats-raised4sDependencies` = Seq(
+  "org.typelevel" %% "cats-core" % "2.12.0"
 )
