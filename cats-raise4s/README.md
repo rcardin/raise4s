@@ -29,7 +29,7 @@ given Semigroup[MyError2] with {
 }
 
 val block: List[Int] raises MyError2 =
-  CatsRaise.mapOrAccumulate(List(1, 2, 3, 4, 5)) { value1 =>
+  CatsRaise.mapOrAccumulateS(List(1, 2, 3, 4, 5)) { value1 =>
     value1 + 1
   }
 val actual = Raise.fold(
