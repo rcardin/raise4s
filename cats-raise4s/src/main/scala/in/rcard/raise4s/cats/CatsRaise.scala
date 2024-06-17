@@ -44,8 +44,8 @@ object CatsRaise {
    * @return
    *   A list of transformed elements
    */
-  def mapOrAccumulate[Error: Semigroup, A, B](iterable: Iterable[A])(
-      transform: Raise[Error] ?=> A => B
+  inline def mapOrAccumulate[Error: Semigroup, A, B](iterable: Iterable[A])(
+      inline transform: Raise[Error] ?=> A => B
   )(using r: Raise[Error]): List[B] =
     Raise.mapOrAccumulate(iterable, Semigroup[Error].combine)(transform)
 }

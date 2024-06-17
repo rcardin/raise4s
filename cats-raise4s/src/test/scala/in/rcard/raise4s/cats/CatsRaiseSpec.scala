@@ -13,7 +13,7 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
       MyError2(error1.errors ++ error2.errors)
   }
   
-  "mapOrAccumulate with combine function" should "map all the element of the iterable" in {
+  "mapOrAccumulate on Semigroup[Error]" should "map all the element of the iterable" in {
     val block: List[Int] raises MyError2 =
       CatsRaise.mapOrAccumulate(List(1, 2, 3, 4, 5)) { value1 =>
         value1 + 1
