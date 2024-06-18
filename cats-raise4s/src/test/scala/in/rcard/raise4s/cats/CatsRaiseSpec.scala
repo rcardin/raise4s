@@ -100,25 +100,15 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
 
   it should "accumulate errors combining them" in {
     val block: List[Int] raises MyError2 = CatsRaise.zipOrAccumulateS(
-      {
-        1
-      }, {
-        if (true) Raise.raise(MyError2(List("2"))) else 2
-      }, {
-        3
-      }, {
-        if (true) Raise.raise(MyError2(List("4"))) else 4
-      }, {
-        5
-      }, {
-        if (true) Raise.raise(MyError2(List("6"))) else 6
-      }, {
-        7
-      }, {
-        if (true) Raise.raise(MyError2(List("8"))) else 8
-      }, {
-        9
-      }
+      { 1 },
+      { if (true) Raise.raise(MyError2(List("2"))) else 2 },
+      { 3 },
+      { if (true) Raise.raise(MyError2(List("4"))) else 4 },
+      { 5},
+      { if (true) Raise.raise(MyError2(List("6"))) else 6 },
+      { 7 },
+      { if (true) Raise.raise(MyError2(List("8"))) else 8 },
+      { 9 }
     ) { case (a, b, c, d, e, f, g, h, i) =>
       List(a, b, c, d, e, f, g, h, i)
     }
