@@ -52,6 +52,37 @@ object CatsRaise {
   )(using r: Raise[Error]): List[B] =
     Raise.mapOrAccumulate(iterable, Semigroup[Error].combine)(transform)
 
+  /** Accumulate the errors obtained by executing the `transform` over every element of `iterable`.
+    * We error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) {
+    *   _ + 1
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual shouldBe List(2, 3, 4, 5, 6)
+    * }}}
+    *
+    * @param iterable
+    *   The collection of elements to transform
+    * @param transform
+    *   The transformation to apply to each element that can raise an error of type `Error`
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised
+    * @tparam A
+    *   The type of the elements in the `iterable`
+    * @tparam B
+    *   The type of the transformed elements
+    * @return
+    *   A list of transformed elements
+    */
   inline def mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
       inline transform: Raise[Error] ?=> A => B
   )(using r: Raise[NonEmptyList[Error]]): List[B] =
