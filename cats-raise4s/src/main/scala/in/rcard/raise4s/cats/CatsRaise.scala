@@ -39,7 +39,7 @@ object CatsRaise {
     *   The Raise context
     * @tparam Error
     *   The type of the logical error that can be raised. It must have a [[Semigroup]] instance
-    *   available
+    *   available available
     * @tparam A
     *   The type of the elements in the `iterable`
     * @tparam B
@@ -96,4 +96,287 @@ object CatsRaise {
       )
     )
     NonEmptyList.fromList(errors.toList).fold(results.toList)(r.raise)
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
+    * `action6`, `action7`, `action8`, and `action9`, or accumulate all the occurred errors using
+    * the [[Semigroup]] type class defined on the `Error` type. The tailing `S` in the name of the
+    * function stands for <em>Semigroup</em>.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * case class MyError2(errors: List[String])
+    *
+    * given Semigroup[MyError2] with {
+    *   def combine(error1: MyError2, error2: MyError2): MyError2 =
+    *     MyError2(error1.errors ++ error2.errors)
+    * }
+    *
+    * val block: List[Int] raises MyError2 =
+    *   CatsRaise.zipOrAccumulateS({ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }) {
+    *     case (a, b, c, d, e, f, g, h, i) =>
+    *       List(a, b, c, d, e, f, g, h, i)
+    *   }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param action6
+    *   Code block to run on type `F`
+    * @param action7
+    *   Code block to run on type `G`
+    * @param action8
+    *   Code block to run on type `H`
+    * @param action9
+    *   Code block to run on type `I`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block. It must have a
+    *   [[Semigroup]] instance available
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the sixth code block
+    * @tparam G
+    *   The type of the result of the seventh code block
+    * @tparam H
+    *   The type of the result of the eighth code block
+    * @tparam I
+    *   The type of the result of the ninth code block
+    * @tparam J
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulateS[Error: Semigroup, A, B, C, D, E, F, G, H, I, J](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F,
+      inline action7: Raise[Error] ?=> G,
+      inline action8: Raise[Error] ?=> H,
+      inline action9: Raise[Error] ?=> I
+  )(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: Raise[Error]): J =
+    Raise.zipOrAccumulate(Semigroup[Error].combine)(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      action7,
+      action8,
+      action9
+    )(block)
+
+    /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
+      * `action6`, `action7`, and `action8`, or accumulate all the occurred errors using the
+      * [[Semigroup]] type class defined on the `Error` type. The tailing `S` in the name of the
+      * function stands for <em>Semigroup</em>.
+      *
+      * <h2>Example</h2>
+      * {{{
+      * case class MyError2(errors: List[String])
+      *
+      * given Semigroup[MyError2] with {
+      *   def combine(error1: MyError2, error2: MyError2): MyError2 =
+      *     MyError2(error1.errors ++ error2.errors)
+      * }
+      *
+      * val block: List[Int] raises MyError2 =
+      *   CatsRaise.zipOrAccumulateS({ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }) {
+      *     case (a, b, c, d, e, f, g, h) =>
+      *       List(a, b, c, d, e, f, g, h)
+      *   }
+      * val actual = Raise.fold(
+      *   block,
+      *   error => fail(s"An error occurred: $error"),
+      *   identity
+      * )
+      * actual should be(List(1, 2, 3, 4, 5, 6, 7, 8))
+      * }}}
+      *
+      * @param action1
+      *   Code block to run on type `A`
+      * @param action2
+      *   Code block to run on type `B`
+      * @param action3
+      *   Code block to run on type `C`
+      * @param action4
+      *   Code block to run on type `D`
+      * @param action5
+      *   Code block to run on type `E`
+      * @param action6
+      *   Code block to run on type `F`
+      * @param action7
+      *   Code block to run on type `G`
+      * @param action8
+      *   Code block to run on type `H`
+      * @param block
+      *   Function to run on the results of the code blocks
+      * @param r
+      *   The Raise context
+      * @tparam Error
+      *   The type of the logical error that can be raised by any code block. It must have a
+      *   [[Semigroup]] instance available
+      * @tparam A
+      *   The type of the result of the first code block
+      * @tparam B
+      *   The type of the result of the second code block
+      * @tparam C
+      *   The type of the result of the third code block
+      * @tparam D
+      *   The type of the result of the fourth code block
+      * @tparam E
+      *   The type of the result of the fifth code block
+      * @tparam F
+      *   The type of the result of the sixth code block
+      * @tparam G
+      *   The type of the result of the seventh code block
+      * @tparam H
+      *   The type of the result of the eighth code block
+      * @tparam I
+      *   The type of the result of the block function
+      * @return
+      *   The result of the block function
+      */
+  inline def zipOrAccumulateS[Error: Semigroup, A, B, C, D, E, F, G, H, I](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F,
+      inline action7: Raise[Error] ?=> G,
+      inline action8: Raise[Error] ?=> H
+  )(inline block: (A, B, C, D, E, F, G, H) => I)(using r: Raise[Error]): I =
+    Raise.zipOrAccumulate(Semigroup[Error].combine)(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      action7,
+      action8,
+      {}
+    ) { (a, b, c, d, e, f, g, h, _) =>
+      block(a, b, c, d, e, f, g, h)
+    }
+
+    /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
+      * `action6`, and `action7`, or accumulate all the occurred errors using the
+      * [[Semigroup]] type class defined on the `Error` type. The tailing `S` in the name of the
+      * function stands for <em>Semigroup</em>.
+      *
+      * <h2>Example</h2>
+      * {{{
+      * case class MyError2(errors: List[String])
+      *
+      * given Semigroup[MyError2] with {
+      *   def combine(error1: MyError2, error2: MyError2): MyError2 =
+      *     MyError2(error1.errors ++ error2.errors)
+      * }
+      *
+      * val block: List[Int] raises MyError2 =
+      *   CatsRaise.zipOrAccumulateS({ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }) {
+      *     case (a, b, c, d, e, f, g) =>
+      *       List(a, b, c, d, e, f, g)
+      *   }
+      * val actual = Raise.fold(
+      *   block,
+      *   error => fail(s"An error occurred: $error"),
+      *   identity
+      * )
+      * actual should be(List(1, 2, 3, 4, 5, 6, 7))
+      * }}}
+      *
+      * @param action1
+      *   Code block to run on type `A`
+      * @param action2
+      *   Code block to run on type `B`
+      * @param action3
+      *   Code block to run on type `C`
+      * @param action4
+      *   Code block to run on type `D`
+      * @param action5
+      *   Code block to run on type `E`
+      * @param action6
+      *   Code block to run on type `F`
+      * @param action7
+      *   Code block to run on type `G`
+      * @param block
+      *   Function to run on the results of the code blocks
+      * @param r
+      *   The Raise context
+      * @tparam Error
+      *   The type of the logical error that can be raised by any code block. It must have a
+      *   [[Semigroup]] instance available
+      * @tparam A
+      *   The type of the result of the first code block
+      * @tparam B
+      *   The type of the result of the second code block
+      * @tparam C
+      *   The type of the result of the third code block
+      * @tparam D
+      *   The type of the result of the fourth code block
+      * @tparam E
+      *   The type of the result of the fifth code block
+      * @tparam F
+      *   The type of the result of the sixth code block
+      * @tparam G
+      *   The type of the result of the seventh code block
+      * @tparam H
+      *   The type of the result of the block function
+      * @return
+      *   The result of the block function
+      */
+  inline def zipOrAccumulateS[Error: Semigroup, A, B, C, D, E, F, G, H](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F,
+      inline action7: Raise[Error] ?=> G
+  )(inline block: (A, B, C, D, E, F, G) => H)(using r: Raise[Error]): H =
+    Raise.zipOrAccumulate(Semigroup[Error].combine)(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      action7,
+      {},
+      {}
+    ) { (a, b, c, d, e, f, g, _, _) =>
+      block(a, b, c, d, e, f, g)
+    }
 }
