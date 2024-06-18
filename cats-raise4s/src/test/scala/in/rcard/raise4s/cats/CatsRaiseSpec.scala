@@ -77,6 +77,6 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
       identity
     )
 
-    actual shouldBe List("2", "4")
+    actual shouldBe NonEmptyList.of("2", "4")
   }
 }
