@@ -104,7 +104,7 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
       { if (true) Raise.raise(MyError2(List("2"))) else 2 },
       { 3 },
       { if (true) Raise.raise(MyError2(List("4"))) else 4 },
-      { 5},
+      { 5 },
       { if (true) Raise.raise(MyError2(List("6"))) else 6 },
       { 7 },
       { if (true) Raise.raise(MyError2(List("8"))) else 8 },
@@ -120,5 +120,53 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
     )
 
     actual should be(MyError2(List("2", "4", "6", "8")))
+  }
+
+  "zipOrAccumulate on NonEmptyList" should "zip 9 elements" in {
+    val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+      { 1 },
+      { 2 },
+      { 3 },
+      { 4 },
+      { 5 },
+      { 6 },
+      { 7 },
+      { 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual should be(List(1, 2, 3, 4, 5, 6, 7, 8, 9))
+  }
+
+  it should "accumulate errors" in {
+    val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+      { 1 },
+      { if (true) Raise.raise("2") else 2 },
+      { 3 },
+      { if (true) Raise.raise("4") else 4 },
+      { 5 },
+      { if (true) Raise.raise("6") else 6 },
+      { 7 },
+      { if (true) Raise.raise("8") else 8 },
+      { 9 }
+    ) { case (a, b, c, d, e, f, g, h, i) =>
+      List(a, b, c, d, e, f, g, h, i)
+    }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of("2", "4", "6", "8")
   }
 }
