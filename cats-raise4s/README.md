@@ -2,6 +2,7 @@
 <br/>
 
 # Raise4s for Cats
+
 Integration of the Raise DSL with some useful Cats data structures.
 
 ## Dependency
@@ -14,44 +15,65 @@ libraryDependencies += "in.rcard.raise4s" %% "cats-raise4s" % "0.0.6"
 
 The library is only available for Scala 3.
 
-## Usage 
+## Usage
 
 In general, the integration lets you use the _Cats_ type classes with the _Raise_ DSL. In detail:
 
-- Use the `Semigroup` type class to combine errors in the `mapOrAccumlate` function.
+- Use the `Semigroup` type class to combine errors in the `mapOrAccumlateS` function.
 
-```scala 3
-case class MyError2(errors: List[String])
-
-given Semigroup[MyError2] with {
-  def combine(error1: MyError2, error2: MyError2): MyError2 =
-    MyError2(error1.errors ++ error2.errors)
-}
-
-val block: List[Int] raises MyError2 =
-  CatsRaise.mapOrAccumulateS(List(1, 2, 3, 4, 5)) { value1 =>
-    value1 + 1
+  ```scala 3
+  case class MyError2(errors: List[String])
+  
+  given Semigroup[MyError2] with {
+    def combine(error1: MyError2, error2: MyError2): MyError2 =
+      MyError2(error1.errors ++ error2.errors)
   }
-val actual = Raise.fold(
-  block,
-  error => fail(s"An error occurred: $error"),
-  identity
-)
-actual shouldBe List(2, 3, 4, 5, 6)
-```
+  
+  val block: List[Int] raises MyError2 =
+    CatsRaise.mapOrAccumulateS(List(1, 2, 3, 4, 5)) { value1 =>
+      value1 + 1
+    }
+  val actual = Raise.fold(
+    block,
+    error => fail(s"An error occurred: $error"),
+    identity
+  )
+  actual shouldBe List(2, 3, 4, 5, 6)
+  ```
 
 - Use of the `NonEmptyList` data class to handle errors in the `mapOrAccumulate` function.
 
-```scala 3
-val block: List[Int] raises NonEmptyList[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) {
-  _ + 1
-}
+  ```scala 3
+  val block: List[Int] raises NonEmptyList[String] = Raise.mapOrAccumulate(List(1, 2, 3, 4, 5)) {
+    _ + 1
+  }
+  
+  val actual = Raise.fold(
+    block,
+    error => fail(s"An error occurred: $error"),
+    identity
+  )
+  
+  actual shouldBe List(2, 3, 4, 5, 6)
+  ```
 
-val actual = Raise.fold(
-  block,
-  error => fail(s"An error occurred: $error"),
-  identity
-)
+- Use the `Semigroup` type class to combine errors in the `zipOrAccumlateS` set of functions.
 
-actual shouldBe List(2, 3, 4, 5, 6)
-```
+  ```scala 3
+  case class MyError2(errors: List[String])
+  given Semigroup[MyError2] with {
+    def combine(error1: MyError2, error2: MyError2): MyError2 =
+      MyError2(error1.errors ++ error2.errors)
+  }
+  val block: List[Int] raises MyError2 =
+    CatsRaise.zipOrAccumulateS({ 1 }, { 2 }) {
+      case (a, b) =>
+        List(a, b)
+    }
+  val actual = Raise.fold(
+    block,
+    error => fail(s"An error occurred: $error"),
+    identity
+  )
+  actual should be(List(1, 2))
+  ```
