@@ -866,4 +866,532 @@ object CatsRaise {
 
     NonEmptyList.fromList(errors.toList).fold(block(a, b, c, d, e, f, g, h, i))(r.raise)
   }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
+    * `action6`, `action7`, and `action8`. The error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 },
+    *   { 5 },
+    *   { 6 },
+    *   { 7 },
+    *   { 8 }
+    * ) { case (a, b, c, d, e, f, g, h) =>
+    *   List(a, b, c, d, e, f, g, h)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5, 6, 7, 8))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param action6
+    *   Code block to run on type `F`
+    * @param action7
+    *   Code block to run on type `G`
+    * @param action8
+    *   Code block to run on type `H`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the sixth code block
+    * @tparam G
+    *   The type of the result of the seventh code block
+    * @tparam H
+    *   The type of the result of the eighth code block
+    * @tparam I
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F,
+      inline action7: Raise[Error] ?=> G,
+      inline action8: Raise[Error] ?=> H
+  )(inline block: (A, B, C, D, E, F, G, H) => I)(using r: Raise[NonEmptyList[Error]]): I = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      action7,
+      action8,
+      {}
+    ) { case (a, b, c, d, e, f, g, h, _) =>
+      block(a, b, c, d, e, f, g, h)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
+    * `action6`, and `action7`. The error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 },
+    *   { 5 },
+    *   { 6 },
+    *   { 7 }
+    * ) { case (a, b, c, d, e, f, g) =>
+    *   List(a, b, c, d, e, f, g)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5, 6, 7))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param action6
+    *   Code block to run on type `F`
+    * @param action7
+    *   Code block to run on type `G`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the sixth code block
+    * @tparam G
+    *   The type of the result of the seventh code block
+    * @tparam H
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F,
+      inline action7: Raise[Error] ?=> G
+  )(inline block: (A, B, C, D, E, F, G) => H)(using r: Raise[NonEmptyList[Error]]): H = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      action7,
+      {},
+      {}
+    ) { case (a, b, c, d, e, f, g, _, _) =>
+      block(a, b, c, d, e, f, g)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`, and
+    * `action6`. The error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 },
+    *   { 5 },
+    *   { 6 }
+    * ) { case (a, b, c, d, e, f) =>
+    *   List(a, b, c, d, e, f)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5, 6))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param action6
+    *   Code block to run on type `F`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the sixth code block
+    * @tparam G
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E,
+      inline action6: Raise[Error] ?=> F
+  )(inline block: (A, B, C, D, E, F) => G)(using r: Raise[NonEmptyList[Error]]): G = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      action6,
+      {},
+      {},
+      {}
+    ) { case (a, b, c, d, e, f, _, _, _) =>
+      block(a, b, c, d, e, f)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, and `action5`.
+    * The error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 },
+    *   { 5 }
+    * ) { case (a, b, c, d, e) =>
+    *   List(a, b, c, d, e)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4, 5))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param action5
+    *   Code block to run on type `E`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the fifth code block
+    * @tparam F
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D,
+      inline action5: Raise[Error] ?=> E
+  )(inline block: (A, B, C, D, E) => F)(using r: Raise[NonEmptyList[Error]]): F = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      action4,
+      action5,
+      {},
+      {},
+      {},
+      {}
+    ) { case (a, b, c, d, e, _, _, _, _) =>
+      block(a, b, c, d, e)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, `action2`, `action3`, and `action4`. The error
+    * channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 }
+    * ) { case (a, b, c, d) =>
+    *   List(a, b, c, d)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3, 4))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param action4
+    *   Code block to run on type `D`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the fourth code block
+    * @tparam E
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D, E](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C,
+      inline action4: Raise[Error] ?=> D
+  )(inline block: (A, B, C, D) => E)(using r: Raise[NonEmptyList[Error]]): E = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      action4,
+      {},
+      {},
+      {},
+      {},
+      {}
+    ) { case (a, b, c, d, _, _, _, _, _) =>
+      block(a, b, c, d)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, `action2`, and `action3`. The error channel uses
+    * a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 }
+    * ) { case (a, b, c) =>
+    *   List(a, b, c)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2, 3))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param action3
+    *   Code block to run on type `C`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the third code block
+    * @tparam D
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C, D](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B,
+      inline action3: Raise[Error] ?=> C
+  )(inline block: (A, B, C) => D)(using r: Raise[NonEmptyList[Error]]): D = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      action3,
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    ) { case (a, b, c, _, _, _, _, _, _) =>
+      block(a, b, c)
+    }
+  }
+
+  /** Accumulate the errors from running `action1`, and `action2`. The error channel uses a
+    * [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    *   { 1 },
+    *   { 2 },
+    *   { 3 },
+    *   { 4 }
+    * ) { case (a, b) =>
+    *   List(a, b)
+    * }
+    * val actual = Raise.fold(
+    *   block,
+    *   error => fail(s"An error occurred: $error"),
+    *   identity
+    * )
+    * actual should be(List(1, 2))
+    * }}}
+    *
+    * @param action1
+    *   Code block to run on type `A`
+    * @param action2
+    *   Code block to run on type `B`
+    * @param block
+    *   Function to run on the results of the code blocks
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised by any code block
+    * @tparam A
+    *   The type of the result of the first code block
+    * @tparam B
+    *   The type of the result of the second code block
+    * @tparam C
+    *   The type of the result of the block function
+    * @return
+    *   The result of the block function
+    */
+  inline def zipOrAccumulate[Error, A, B, C](
+      inline action1: Raise[Error] ?=> A,
+      inline action2: Raise[Error] ?=> B
+  )(inline block: (A, B) => C)(using r: Raise[NonEmptyList[Error]]): C = {
+    zipOrAccumulate(
+      action1,
+      action2,
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    ) { case (a, b, _, _, _, _, _, _, _) =>
+      block(a, b)
+    }
+  }
 }
