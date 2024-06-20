@@ -77,3 +77,22 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   )
   actual should be(List(1, 2))
   ```
+
+- Use of the `NonEmptyList` data class to handle errors in the `zipOrAccumulate` function.
+
+  ```scala 3
+  val block: List[Int] raises NonEmptyList[String] = CatsRaise.zipOrAccumulate(
+    { 1 },
+    { 2 },
+    { 3 },
+    { 4 }
+  ) { case (a, b) =>
+    List(a, b)
+  }
+  val actual = Raise.fold(
+    block,
+    error => fail(s"An error occurred: $error"),
+    identity
+  )
+  actual should be(List(1, 2))
+  ```
