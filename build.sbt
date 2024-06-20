@@ -51,7 +51,7 @@ lazy val raise4s = (project in file("."))
 
 lazy val dependencies =
   new {
-    val scalatestVersion = "3.2.17"
+    val scalatestVersion = "3.2.18"
     val scalatest        = "org.scalatest" %% "scalatest" % scalatestVersion
   }
 
