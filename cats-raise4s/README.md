@@ -1,3 +1,4 @@
+[![javadoc](https://javadoc.io/badge2/in.rcard.raise4s/cats-raise4s_3/javadoc.svg)](https://javadoc.io/doc/in.rcard.raise4s/cats-raise4s_3)
 <a href="https://typelevel.org/cats/"><img src="https://typelevel.org/cats/img/cats-badge.svg" height="40px" align="right" alt="Cats friendly" /></a>
 <br/>
 
