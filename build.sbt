@@ -25,7 +25,7 @@ val scala3Version = "3.4.2"
 scalaVersion := scala3Version
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.2.18" % Test
+  "org.scalatest" %% "scalatest" % "3.2.19" % Test
 )
 
 lazy val core = project
