@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import scala.annotation.tailrec
+
 private[raise4s] inline def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
     inline transform: Raise[Error] ?=> A => B
 )(using r: Raise[List[Error]]): List[B] =
@@ -47,8 +49,49 @@ object RaiseIterableDef:
       * @return
       *   A list of the transformed elements of the iterable
       */
-    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using r: Raise[List[Error]]): List[B] =
+    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using
+        r: Raise[List[Error]]
+    ): List[B] =
       Raise.mapOrAccumulate(iterable)(transform)
+
+object ZipRAnyPredef:
+  extension [T <: Tuple](actions: T)
+    def zipR[Error: Raise, Y <: Tuple, Z](block: Y => Z): Raise[List[Error]] ?=> Z = {
+      @tailrec
+      def acc(
+          current: Tuple,
+          accumulated: Tuple,
+          errors: collection.mutable.ArrayBuffer[Error]
+      ): Raise[List[Error]] ?=> Z = {
+        current match {
+          case tuple: ((Raise[Error] ?=> h) *: t) =>
+            val head = tuple.head
+            val result = Raise.recover[Error, h](head) { (newError: Error) =>
+              errors += newError; null.asInstanceOf[h]
+            }
+            val tail = tuple.tail
+            acc(tail, accumulated :* result, errors)
+          case EmptyTuple =>
+            if errors.isEmpty then block(accumulated.asInstanceOf[Y])
+            else Raise.raise(errors.toList)
+
+
+
+//          case EmptyTuple =>
+//            if errors.isEmpty then block(accumulated.asInstanceOf[Y])
+//            else Raise.raise(errors.toList)
+//          case tup: ((Raise[Error] ?=> h) *: t) =>
+//            val head = tup.head
+//            val result = Raise.recover(head) { newError =>
+//              errors += newError; null.asInstanceOf[h]
+//            }
+//            val tail = tup.tail
+//            acc(tail, accumulated :* result, errors)
+        }
+      }
+
+      acc(actions, EmptyTuple, collection.mutable.ArrayBuffer.empty[Error])
+    }
 
 private[raise4s] inline def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
     inline action1: Raise[Error] ?=> A,

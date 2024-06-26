@@ -1,6 +1,7 @@
 package in.rcard.raise4s
 
 import in.rcard.raise4s.RaiseIterableDef.mapOrAccumulate
+import in.rcard.raise4s.ZipRAnyPredef.zipR
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -229,6 +230,32 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     )
 
     actual should be(List("2", "4", "6", "8"))
+  }
+
+  "zipR" should "accumulate errors" in {
+    val firstValidation: Int raises String = {
+      if (true) Raise.raise("2") else 2
+    }
+
+    val secondValidation: Int raises String = {
+      if (true) Raise.raise("4") else 4
+    }
+
+    val tuple: (Int raises String, Int raises String, Int raises String) = (firstValidation, { 1 }, secondValidation)
+
+    val block: List[Int] raises List[String] =
+      tuple.zipR {
+        case (a: Int, b: Int) =>
+          List(a, b)
+      }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual should be(List("2", "4"))
   }
 
   "zipOrAccumulate with combine" should "zip 9 elements" in {
