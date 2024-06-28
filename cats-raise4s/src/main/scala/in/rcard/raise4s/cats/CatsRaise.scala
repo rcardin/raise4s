@@ -1,7 +1,7 @@
 package in.rcard.raise4s.cats
 
 import cats.Semigroup
-import cats.data.NonEmptyList
+import cats.data.*
 import in.rcard.raise4s.Raise
 
 object CatsRaise {
@@ -1394,4 +1394,77 @@ object CatsRaise {
       block(a, b)
     }
   }
+
+  /** Runs a computation `block` using [[Raise]], and return its outcome as [[Validated]].
+    *   - [[Validated.Valid]] represents success,
+    *   - [[Validated.Invalid]] represents logical failure.
+    *
+    * This function re-throws any exceptions thrown within the [[Raise]] block.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * CatsRaise.validated { raise("error") } should be(Validated.invalid("error"))
+    * }}}
+    *
+    * @param block
+    *   A computation that can raise errors of type `Error`
+    * @tparam A
+    *   The type of the value returned by the computation
+    * @tparam Error
+    *   The type of the logical error that can be raised by the computation
+    * @return
+    *   An [[Validated]] representing the outcome of the computation
+    */
+  inline def validated[Error, A](inline block: Raise[Error] ?=> A): Validated[Error, A] =
+    Raise.fold(
+      block,
+      error => Validated.invalid(error),
+      value => Validated.valid(value)
+    )
+
+  /** Runs a computation `block` using [[Raise]], and return its outcome as [[ValidatedNec]].
+    *
+    * <h2>Example</h2>
+    * {{{
+    * CatsRaise.validatedNec {
+    *   raise("error")
+    * } should be(Validated.invalid(NonEmptyChain.one("error")))
+    * }}}
+    *
+    * @param block
+    *   A computation that can raise errors of type `Error`
+    * @tparam A
+    *   The type of the value returned by the computation
+    * @tparam Error
+    *   The type of the logical error that can be raised by the computation
+    * @return
+    *   An [[ValidatedNec]] representing the outcome of the computation
+    */
+  inline def validatedNec[Error, A](inline block: Raise[Error] ?=> A): ValidatedNec[Error, A] =
+    validated(
+      Raise.withError[NonEmptyChain[Error], Error, A](error => NonEmptyChain.one(error))(block)
+    )
+
+  /** Runs a computation `block` using [[Raise]], and return its outcome as [[ValidatedNel]].
+    *
+    * <h2>Example</h2>
+    * {{{
+    * CatsRaise.validatedNel {
+    *   raise("error")
+    * } should be(Validated.invalid(NonEmptyList.one("error")))
+    * }}}
+    *
+    * @param block
+    *   A computation that can raise errors of type `Error`
+    * @tparam A
+    *   The type of the value returned by the computation
+    * @tparam Error
+    *   The type of the logical error that can be raised by the computation
+    * @return
+    *   An [[ValidatedNel]] representing the outcome of the computation
+    */
+  inline def validatedNel[Error, A](inline block: Raise[Error] ?=> A): ValidatedNel[Error, A] =
+    validated(
+      Raise.withError[NonEmptyList[Error], Error, A](error => NonEmptyList.one(error))(block)
+    )
 }

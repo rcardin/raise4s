@@ -1,7 +1,8 @@
 package in.rcard.raise4s.cats
 
 import cats.Semigroup
-import cats.data.NonEmptyList
+import cats.data.{NonEmptyChain, NonEmptyList, Validated}
+import in.rcard.raise4s.RaiseAnyPredef.raise
 import in.rcard.raise4s.{Raise, raises}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -168,5 +169,37 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
     )
 
     actual shouldBe NonEmptyList.of("2", "4", "6", "8")
+  }
+
+  "The 'validated' builder" should "create a Valid instance" in {
+    CatsRaise.validated({ 42 }) should be(Validated.valid(42))
+  }
+
+  it should "create an Invalid instance" in {
+    CatsRaise.validated { raise("error") } should be(Validated.invalid("error"))
+  }
+
+  "The 'validatedNec' builder" should "create a Valid instance" in {
+    CatsRaise.validatedNec {
+      42
+    } should be(Validated.valid(42))
+  }
+
+  it should "create an Invalid instance" in {
+    CatsRaise.validatedNec {
+      raise("error")
+    } should be(Validated.invalid(NonEmptyChain.one("error")))
+  }
+
+  "The 'validatedNel' builder" should "create a Valid instance" in {
+    CatsRaise.validatedNel {
+      42
+    } should be(Validated.valid(42))
+  }
+
+  it should "create an Invalid instance" in {
+    CatsRaise.validatedNel {
+      raise("error")
+    } should be(Validated.invalid(NonEmptyList.one("error")))
   }
 }

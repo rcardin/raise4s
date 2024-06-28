@@ -104,4 +104,10 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   val one: Validated[String, Int] = Validated.Valid(1)
   val actual: Int = Raise.recover(one.value) { _ => 2 }
   actual should be(1)
-  ``` 
+  ```
+
+- Convert a `A raises Error` block into a `Validated[Error, A]` instance. The library has also builders `validatedNec` and `validatedNel` to convert into `ValidatedNec` and `ValidatedNel` instances.
+
+  ```scala 3
+  CatsRaise.validated { raise("error") } should be(Validated. invalid("error"))
+  ```
