@@ -332,10 +332,10 @@ object Raise {
     * val one: Either[Nothing, Int] = Right(1)
     * val left: Either[String, Int] = Left("error")
     * val actual = either {
-    *   val x = one.bind()
+    *   val x = one.value
     *   val y = recover(
     *     {
-    *       left.bind()
+    *       left.value
     *     },
     *     { _ => 1 }
     *   )
@@ -364,8 +364,8 @@ object Raise {
     * val some: Option[Int] = Some(1)
     * val none: Option[Int] = None
     * val actual = option {
-    *   val x = some.bind()
-    *   val y = recover({ none.bind() }, { _ => 1 })
+    *   val x = some.value
+    *   val y = recover({ none.value }, { _ => 1 })
     *   x + y
     * }
     * actual should be(Some(2))
@@ -387,8 +387,8 @@ object Raise {
     * val one: Try[Int]     = Success(1)
     * val failure: Try[Int] = Failure(new Exception("error"))
     * val actual = asTry {
-    *   val x = one.bind()
-    *   val y = recover({ failure.bind() }, { _ => 1 })
+    *   val x = one.value
+    *   val y = recover({ failure.value }, { _ => 1 })
     *   x + y
     * }
     * actual should be(Success(2))
