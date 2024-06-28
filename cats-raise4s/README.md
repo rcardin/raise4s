@@ -97,3 +97,11 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   )
   actual should be(List(1, 2))
   ```
+
+- Convert a `Validated[Error, A]` instance to a `A raises Error` instance (it works with `ValidatedNel` and `ValidatedNec` either).
+
+  ```scala 3
+  val one: Validated[String, Int] = Validated.Valid(1)
+  val actual: Int = Raise.recover(one.value) { _ => 2 }
+  actual should be(1)
+  ``` 
