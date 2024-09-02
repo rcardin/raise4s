@@ -21,7 +21,7 @@ sonatypeProfileName                := "in.rcard"
 
 name := "raise4s"
 //version := "0.0.1-SNAPSHOT"
-val scala3Version = "3.4.2"
+val scala3Version = "3.4.3"
 scalaVersion := scala3Version
 
 libraryDependencies ++= Seq(
