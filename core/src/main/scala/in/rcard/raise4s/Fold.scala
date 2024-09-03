@@ -2,7 +2,7 @@ package in.rcard.raise4s
 
 private[raise4s] inline def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
     inline transform: Raise[Error] ?=> A => B
-)(using r: Raise[List[Error]]): List[B] =
+)(using r: RaiseAcc[Error]): List[B] =
   val errors  = collection.mutable.ArrayBuffer.empty[Error]
   val results = collection.mutable.ArrayBuffer.empty[B]
   iterable.foreach(a =>
@@ -47,7 +47,7 @@ object RaiseIterableDef:
       * @return
       *   A list of the transformed elements of the iterable
       */
-    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using r: Raise[List[Error]]): List[B] =
+    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using r: RaiseAcc[Error]): List[B] =
       Raise.mapOrAccumulate(iterable)(transform)
 
 private[raise4s] inline def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
@@ -60,7 +60,7 @@ private[raise4s] inline def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J
     inline action7: Raise[Error] ?=> G,
     inline action8: Raise[Error] ?=> H,
     inline action9: Raise[Error] ?=> I
-)(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: Raise[List[Error]]): J = {
+)(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: RaiseAcc[Error]): J = {
   val errors = collection.mutable.ArrayBuffer.empty[Error]
   val a: A = Raise.recover(action1) { newError =>
     errors += newError; null.asInstanceOf[A]
