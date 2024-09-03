@@ -4,6 +4,8 @@ import cats.Semigroup
 import cats.data.*
 import in.rcard.raise4s.Raise
 
+type RaiseNel[Error] = Raise[NonEmptyList[Error]]
+
 object CatsRaise {
 
   /** Transform every element of `iterable` using the given `transform`, or accumulate all the
@@ -85,7 +87,7 @@ object CatsRaise {
     */
   inline def mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
       inline transform: Raise[Error] ?=> A => B
-  )(using r: Raise[NonEmptyList[Error]]): List[B] =
+  )(using r: RaiseNel[Error]): List[B] =
     val errors  = collection.mutable.ArrayBuffer.empty[Error]
     val results = collection.mutable.ArrayBuffer.empty[B]
     iterable.foreach(a =>
@@ -834,7 +836,7 @@ object CatsRaise {
       inline action7: Raise[Error] ?=> G,
       inline action8: Raise[Error] ?=> H,
       inline action9: Raise[Error] ?=> I
-  )(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: Raise[NonEmptyList[Error]]): J = {
+  )(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: RaiseNel[Error]): J = {
     val errors = collection.mutable.ArrayBuffer.empty[Error]
     val a: A = Raise.recover(action1) { newError =>
       errors += newError; null.asInstanceOf[A]
@@ -944,7 +946,7 @@ object CatsRaise {
       inline action6: Raise[Error] ?=> F,
       inline action7: Raise[Error] ?=> G,
       inline action8: Raise[Error] ?=> H
-  )(inline block: (A, B, C, D, E, F, G, H) => I)(using r: Raise[NonEmptyList[Error]]): I = {
+  )(inline block: (A, B, C, D, E, F, G, H) => I)(using r: RaiseNel[Error]): I = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1031,7 +1033,7 @@ object CatsRaise {
       inline action5: Raise[Error] ?=> E,
       inline action6: Raise[Error] ?=> F,
       inline action7: Raise[Error] ?=> G
-  )(inline block: (A, B, C, D, E, F, G) => H)(using r: Raise[NonEmptyList[Error]]): H = {
+  )(inline block: (A, B, C, D, E, F, G) => H)(using r: RaiseNel[Error]): H = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1112,7 +1114,7 @@ object CatsRaise {
       inline action4: Raise[Error] ?=> D,
       inline action5: Raise[Error] ?=> E,
       inline action6: Raise[Error] ?=> F
-  )(inline block: (A, B, C, D, E, F) => G)(using r: Raise[NonEmptyList[Error]]): G = {
+  )(inline block: (A, B, C, D, E, F) => G)(using r: RaiseNel[Error]): G = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1187,7 +1189,7 @@ object CatsRaise {
       inline action3: Raise[Error] ?=> C,
       inline action4: Raise[Error] ?=> D,
       inline action5: Raise[Error] ?=> E
-  )(inline block: (A, B, C, D, E) => F)(using r: Raise[NonEmptyList[Error]]): F = {
+  )(inline block: (A, B, C, D, E) => F)(using r: RaiseNel[Error]): F = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1256,7 +1258,7 @@ object CatsRaise {
       inline action2: Raise[Error] ?=> B,
       inline action3: Raise[Error] ?=> C,
       inline action4: Raise[Error] ?=> D
-  )(inline block: (A, B, C, D) => E)(using r: Raise[NonEmptyList[Error]]): E = {
+  )(inline block: (A, B, C, D) => E)(using r: RaiseNel[Error]): E = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1320,7 +1322,7 @@ object CatsRaise {
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B,
       inline action3: Raise[Error] ?=> C
-  )(inline block: (A, B, C) => D)(using r: Raise[NonEmptyList[Error]]): D = {
+  )(inline block: (A, B, C) => D)(using r: RaiseNel[Error]): D = {
     zipOrAccumulate(
       action1,
       action2,
@@ -1379,7 +1381,7 @@ object CatsRaise {
   inline def zipOrAccumulate[Error, A, B, C](
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B
-  )(inline block: (A, B) => C)(using r: Raise[NonEmptyList[Error]]): C = {
+  )(inline block: (A, B) => C)(using r: RaiseNel[Error]): C = {
     zipOrAccumulate(
       action1,
       action2,
