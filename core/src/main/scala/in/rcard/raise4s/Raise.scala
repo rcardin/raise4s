@@ -18,6 +18,8 @@ private[raise4s] class DefaultRaise extends Raise[Any]:
 
 infix type raises[R, Error] = Raise[Error] ?=> R
 
+type RaiseAcc[Error] = Raise[List[Error]]
+
 /** Defines the main scope of the functions available on the `Raise` context.
   */
 object Raise {
@@ -435,7 +437,7 @@ object Raise {
     */
   inline def mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
       inline transform: Raise[Error] ?=> A => B
-  )(using r: Raise[List[Error]]): List[B] = _mapOrAccumulate(iterable)(transform)
+  )(using r: RaiseAcc[Error]): List[B] = _mapOrAccumulate(iterable)(transform)
 
   /** Transform every element of `iterable` using the given `transform`, or accumulate all the
     * occurred errors using `combine`.
@@ -525,7 +527,7 @@ object Raise {
   inline def zipOrAccumulate[Error, A, B, C](
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B
-  )(inline block: (A, B) => C)(using r: Raise[List[Error]]): C =
+  )(inline block: (A, B) => C)(using r: RaiseAcc[Error]): C =
     _zipOrAccumulate(action1, action2, {}, {}, {}, {}, {}, {}, {}) {
       (a: A, b: B, _, _, _, _, _, _, _) =>
         block(a, b)
@@ -579,7 +581,7 @@ object Raise {
       inline action3: Raise[Error] ?=> C
   )(
       inline block: (A, B, C) => D
-  )(using r: Raise[List[Error]]): D =
+  )(using r: RaiseAcc[Error]): D =
     _zipOrAccumulate(action1, action2, action3, {}, {}, {}, {}, {}, {}) {
       (a: A, b: B, c: C, _, _, _, _, _, _) =>
         block(a, b, c)
@@ -639,7 +641,7 @@ object Raise {
       inline action4: Raise[Error] ?=> D
   )(
       inline block: (A, B, C, D) => E
-  )(using r: Raise[List[Error]]): E =
+  )(using r: RaiseAcc[Error]): E =
     _zipOrAccumulate(action1, action2, action3, action4, {}, {}, {}, {}, {}) {
       (a: A, b: B, c: C, d: D, _, _, _, _, _) =>
         block(a, b, c, d)
@@ -705,7 +707,7 @@ object Raise {
       inline action5: Raise[Error] ?=> E
   )(
       inline block: (A, B, C, D, E) => F
-  )(using r: Raise[List[Error]]): F =
+  )(using r: RaiseAcc[Error]): F =
     _zipOrAccumulate(action1, action2, action3, action4, action5, {}, {}, {}, {}) {
       (a: A, b: B, c: C, d: D, e: E, _, _, _, _) => block(a, b, c, d, e)
     }
@@ -777,7 +779,7 @@ object Raise {
       inline action6: Raise[Error] ?=> F
   )(
       inline block: (A, B, C, D, E, F) => G
-  )(using r: Raise[List[Error]]): G =
+  )(using r: RaiseAcc[Error]): G =
     _zipOrAccumulate(action1, action2, action3, action4, action5, action6, {}, {}, {}) {
       (a: A, b: B, c: C, d: D, e: E, f: F, _, _, _) => block(a, b, c, d, e, f)
     }
@@ -855,7 +857,7 @@ object Raise {
       inline action7: Raise[Error] ?=> G
   )(
       inline block: (A, B, C, D, E, F, G) => H
-  )(using r: Raise[List[Error]]): H =
+  )(using r: RaiseAcc[Error]): H =
     _zipOrAccumulate(action1, action2, action3, action4, action5, action6, action7, {}, {}) {
       (a: A, b: B, c: C, d: D, e: E, f: F, g: G, _, _) => block(a, b, c, d, e, f, g)
     }
@@ -939,7 +941,7 @@ object Raise {
       inline action8: Raise[Error] ?=> H
   )(
       inline block: (A, B, C, D, E, F, G, H) => I
-  )(using r: Raise[List[Error]]): I =
+  )(using r: RaiseAcc[Error]): I =
     _zipOrAccumulate(
       action1,
       action2,
@@ -1037,7 +1039,7 @@ object Raise {
       inline action7: Raise[Error] ?=> G,
       inline action8: Raise[Error] ?=> H,
       inline action9: Raise[Error] ?=> I
-  )(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: Raise[List[Error]]): J =
+  )(inline block: (A, B, C, D, E, F, G, H, I) => J)(using r: RaiseAcc[Error]): J =
     _zipOrAccumulate(
       action1,
       action2,
