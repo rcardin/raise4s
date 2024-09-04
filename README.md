@@ -295,6 +295,47 @@ The `bind` function is available for `Try[A]` and `Option[A]` as well.
 
 By the way, there are more feature in the Raise DSL. Please, check the documentation for more information.
 
+## Strategies
+
+We can call a _strategy_ the way we want to handle the errors raised by a function. The whole `raise4s` library give you many predefined ways to deal with errors. For example, you can `fold` on a function, `run` it, `either` it, `asTry` it, `option` it, and so on.
+
+However, the library gives you the possibility to define your own strategy. To do so, you need to define a new instance of the `Raise[E]` type class. The `Raise[E]` type class is a type class that defines how to handle errors of type `E`. The `Raise[E]` type class is defined as follows:
+
+```scala 3
+trait Raise[-Error]:
+  def raise(e: Error): Nothing
+```
+
+For example, you can define a strategy that simply throw an exception for every error raised by a function:
+
+```scala 3
+def loadConfiguration(file: String): Configuration raises ConfigurationError = ???
+
+given Raise[Any] = error => throw new RuntimeException(error.toString)
+val configuration = loadConfiguration(args(0))
+```
+
+The library gives you a type alias to define strategies on all the errors:
+
+```scala 3
+type anyRaised = Raise[Any]
+```
+
+Then, we can rewrite the above example as follows:
+
+```scala 3
+given anyRaised = error => throw new RuntimeException(error.toString)
+```
+
+We can define a strategy for a single error as well:
+
+```scala 3
+given Raise[ConfigurationError] = error => exit(1)
+```
+
+In the above example we're saying that a configuration error must stop the execution of the program.
+
+
 ## Contributing
 
 If you want to contribute to the project, please do it! Any help is welcome.
