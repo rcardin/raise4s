@@ -14,10 +14,37 @@ object Strategies {
 
   type anyRaised = Raise[Any]
 
-  infix type mapTo[EO, EN] = MapError[EO, EN]
-  trait MapError[EO, EN] extends Raise[EO] {
-    def map(error: EO): EN
+  infix type mapTo[From, To] = MapError[From, To]
 
-    def raise(error: EO): Nothing = throw Raised(map(error))
+  /** A strategy that allow to map an error to another one. As a strategy, it should be used as a
+    * `given` instance. Its behavior is comparable to the [[Raise.withError]] method.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val finalLambda: String raises Int = {
+    *   given MapError[String, Int] = error => error.length
+    *   raise("Oops!")
+    * }
+    *
+    * val result: Int | String = Raise.run(finalLambda)
+    * result shouldBe 5
+    * }}}
+    *
+    * @tparam From
+    *   The original error type
+    * @tparam To
+    *   The error type to map to
+    */
+  trait MapError[From, To] extends Raise[From] {
+
+    /** Maps an error to another one.
+      * @param error
+      *   The error to map
+      * @return
+      *   The mapped error
+      */
+    def map(error: From): To
+
+    def raise(error: From): Nothing = throw Raised(map(error))
   }
 }
