@@ -335,6 +335,40 @@ given Raise[ConfigurationError] = error => exit(1)
 
 In the above example we're saying that a configuration error must stop the execution of the program.
 
+### `MapError` Strategy
+
+The library defines a `withError` function to map an error raised by a function to an error of a different type:
+
+```scala 3
+val actual = either {
+  Raise.withError[Int, String, Int](s => s.length) { raise("error") }
+}
+actual should be(Left(5))
+```
+
+In the above example, we map the error of type `String` raised by the given lambda into an error of type `Int`. The `withError` function does its job quite well. However, the function's ergonomics are not so good due to the pair of lambdas we need to provide: The first one is the function that maps the error, and the second one is the function that raises the error.
+
+We can achieve the same result using a dedicated strategy. In detail, the library defines a `MapError` strategy that maps an error of type `E` into an error of type `F`. The `MapError` strategy is defined as follows:
+
+```scala 3
+trait MapError[From, To] extends Raise[From] {
+  def map(error: From): To
+  def raise(error: From): Nothing = throw Raised(map(error))
+}
+```
+
+Then, we can map an error of type `String` into an error of type `Int` by implementing the `MapError` strategy as follows:
+
+```scala 3
+val finalLambda: String raises Int = {
+  given MapError[String, Int] = error => error.length
+  raise("Oops!")
+}
+val result: Int | String = Raise.run(finalLambda)
+result shouldBe 5
+```
+
+As you can see, we're entirely focused on the happy path, and we can define how to handle the errors in a dedicated place.
 
 ## Contributing
 
