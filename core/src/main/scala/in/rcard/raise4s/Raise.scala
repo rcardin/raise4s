@@ -222,18 +222,18 @@ object Raise {
     *   The block to execute
     * @param r
     *   The Raise context
-    * @tparam Error
+    * @tparam ToError
     *   The type of the transformed logical error
-    * @tparam OtherError
+    * @tparam FromError
     *   The type of the logical error that can be raised and transformed
     * @tparam A
     *   The type of the result of the `block`
     * @return
     *   The result of the `block`
     */
-  inline def withError[Error, OtherError, A](inline transform: OtherError => Error)(
-      inline block: Raise[OtherError] ?=> A
-  )(using r: Raise[Error]): A =
+  inline def withError[ToError, FromError, A](inline transform: FromError => ToError)(
+      inline block: Raise[FromError] ?=> A
+  )(using r: Raise[ToError]): A =
     recover(block) { otherError => r.raise(transform(otherError)) }
 
   /** The most general way to execute a computation using [[Raise]]. Depending on the outcome of the
