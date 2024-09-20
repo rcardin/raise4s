@@ -47,4 +47,8 @@ object Strategies {
 
     def raise(error: From): Nothing = throw Raised(map(error))
   }
+
+  trait RecoverWith[Error, A] {
+    def recover(error: Error): A
+  }
 }

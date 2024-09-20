@@ -1,6 +1,7 @@
 package in.rcard.raise4s
 
 import in.rcard.raise4s
+import in.rcard.raise4s.Strategies.RecoverWith
 
 import scala.annotation.targetName
 import scala.util.Try
@@ -483,7 +484,10 @@ object Raise {
     * @return
     *   A list of transformed elements
     */
-  inline def mapOrAccumulate[Error, A, B](iterable: Iterable[A], inline combine: (Error, Error) => Error)(
+  inline def mapOrAccumulate[Error, A, B](
+      iterable: Iterable[A],
+      inline combine: (Error, Error) => Error
+  )(
       inline transform: Raise[Error] ?=> A => B
   )(using r: Raise[Error]): List[B] = _mapOrAccumulate(iterable, combine)(transform)
 
@@ -1452,7 +1456,9 @@ object Raise {
     * @return
     *   The result of the block function
     */
-  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H](inline combine: (Error, Error) => Error)(
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H](
+      inline combine: (Error, Error) => Error
+  )(
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B,
       inline action3: Raise[Error] ?=> C,
@@ -1551,7 +1557,9 @@ object Raise {
     * @return
     *   The result of the block function
     */
-  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I](inline combine: (Error, Error) => Error)(
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I](
+      inline combine: (Error, Error) => Error
+  )(
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B,
       inline action3: Raise[Error] ?=> C,
@@ -1656,7 +1664,9 @@ object Raise {
     * @return
     *   The result of the block function
     */
-  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](inline combine: (Error, Error) => Error)(
+  inline def zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
+      inline combine: (Error, Error) => Error
+  )(
       inline action1: Raise[Error] ?=> A,
       inline action2: Raise[Error] ?=> B,
       inline action3: Raise[Error] ?=> C,
@@ -1700,5 +1710,11 @@ object Raise {
     * @return
     *   The result of the execution of the `block` lambda or the logical error
     */
-  inline def run[Error, A](inline block: Raise[Error] ?=> A): Error | A = raise4s.Runtime._run(block)
+  inline def run[Error, A](inline block: Raise[Error] ?=> A): Error | A =
+    raise4s.Runtime._run(block)
+
+  inline def recoverable[Error, A](inline block: Raise[Error] ?=> A)(using
+      inline recoverBlock: RecoverWith[Error, A]
+  ): A =
+    Raise.recover(block)(error => recoverBlock.recover(error))
 }
