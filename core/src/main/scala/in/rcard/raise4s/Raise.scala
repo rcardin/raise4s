@@ -1713,6 +1713,27 @@ object Raise {
   inline def run[Error, A](inline block: Raise[Error] ?=> A): Error | A =
     raise4s.Runtime._run(block)
 
+  /**
+   * Execute a block of code that can raise a logical error and return the result or tries to recover from the error
+   * using the provided recover block.
+   * 
+   * <h2>Example</h2>
+   * {{{
+   * given RecoverWith[String, Int] = error => 43
+   * val actual = Raise.recoverable {
+   *   Raise.raise("error")
+   * }
+   * actual should be(43)
+   * }}}
+   * 
+   * @param block The block of code to execute that can raise an a logical type error
+   * @param recoverBlock The block of code to execute to recover from the error
+   * @tparam Error The type of the logical error that can be raised by the `block` lambda
+   * @tparam A The type of the result of the execution of `block` lambda
+   * @return The result of the execution of the `block` lambda or the result of the recover block
+   * 
+   * @see [[RecoverWith]]
+   */
   inline def recoverable[Error, A](inline block: Raise[Error] ?=> A)(using
       inline recoverBlock: RecoverWith[Error, A]
   ): A =
