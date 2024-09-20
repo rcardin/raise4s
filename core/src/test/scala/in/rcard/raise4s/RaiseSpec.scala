@@ -1,6 +1,7 @@
 package in.rcard.raise4s
 
 import in.rcard.raise4s.Raise.catching
+import in.rcard.raise4s.Strategies.RecoverWith
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -144,6 +145,33 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     assertThrows[OutOfMemoryError] {
       { throw new OutOfMemoryError("error") }.catching { ex =>
         43
+      }
+    }
+  }
+
+  "recoverable block" should "return the value if it is not an error" in {
+    given RecoverWith[String, Int] = error => 43
+    val actual = Raise.recoverable {
+      42
+    }
+
+    actual should be(42)
+  }
+
+  it should "return the recovery value if the value is an error" in {
+    given RecoverWith[String, Int] = error => 43
+    val actual = Raise.recoverable {
+      Raise.raise("error")
+    }
+
+    actual should be(43)
+  }
+
+  it should "rethrow the exception" in {
+    given RecoverWith[String, Int] = error => 43
+    assertThrows[RuntimeException] {
+      Raise.recoverable {
+        throw new RuntimeException("error")
       }
     }
   }

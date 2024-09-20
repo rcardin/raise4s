@@ -16,7 +16,7 @@ object Strategies {
 
   infix type mapTo[From, To] = MapError[From, To]
 
-  /** A strategy that allow to map an error to another one. As a strategy, it should be used as a
+  /** A strategy that allows to map an error to another one. As a strategy, it should be used as a
     * `given` instance. Its behavior is comparable to the [[Raise.withError]] method.
     *
     * <h2>Example</h2>
@@ -46,5 +46,27 @@ object Strategies {
     def map(error: From): To
 
     def raise(error: From): Nothing = throw Raised(map(error))
+  }
+
+  /** A strategy that allows to recover from an error of type [Error]. As a strategy, it should be
+    * used as a `given` instance. If used with the [[Raise.recoverable]] DSL, its behavior is
+    * comparable to the [[Raise.recover]] method.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * given RecoverWith[String, Int] = error => 43
+    * val actual = Raise.recoverable {
+    *   Raise.raise("error")
+    * }
+    * actual should be(43)
+    * }}}
+    *
+    * @tparam Error The type of the error to recover from
+    * @tparam A The type of the value to return if the recovery is successful
+   *           
+   * @see [[Raise.recoverable]]
+    */
+  trait RecoverWith[Error, A] {
+    def recover(error: Error): A
   }
 }
