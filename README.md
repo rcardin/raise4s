@@ -177,6 +177,15 @@ val usdAmount: Double =
   }) { case NegativeAmount(amount) => 0.0D }
 ```
 
+If you don't care about the error type, and you want to recover from any error with a fixed value, you can use the `withDefault` function:
+
+```scala 3
+val usdAmount: Double =
+  Raise.withDefault(0.0D) {
+    convertToUsd(-1, "EUR")
+  }
+```
+
 ### Accumulating Errors
 
 What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids

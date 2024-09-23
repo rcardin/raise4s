@@ -175,4 +175,20 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
       }
     }
   }
+
+  "withDefault" should "return the value if it is not an error" in {
+    val actual = Raise.either {
+      Raise.withDefault(43) { 42 }
+    }
+
+    actual should be(Right(42))
+  }
+
+  it should "return the default value if the value is an error" in {
+    val actual = Raise.either {
+      Raise.withDefault(43) { Raise.raise("error") }
+    }
+
+    actual should be(Right(43))
+  }
 }
