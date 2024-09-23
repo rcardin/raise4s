@@ -111,3 +111,22 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   ```scala 3
   CatsRaise.validated { raise("error") } should be(Validated. invalid("error"))
   ```
+  
+- Use the `RaiseMonadError[E]` to integrate with your existing code that uses `MonadError`.
+
+  ```scala 3
+  import in.rcard.raise4s.cats.instances.raise.given
+  
+  private def attemptDivideApplicativeError[F[_]](x: Int, y: Int)(implicit
+    ae: ApplicativeError[F, String]
+  ): F[Int] = {
+    if (y == 0) ae.raiseError("divisor is zero")
+    else {
+      ae.pure(x / y)
+    }
+  }
+  
+  type OrError[A] = Raise[String] ?=> A
+  val actual: OrError[Int] = attemptDivideApplicativeError[OrError](30, 0)
+  Raise.run { actual } shouldBe "divisor is zero"
+```
