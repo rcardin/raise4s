@@ -5,7 +5,7 @@ import in.rcard.raise4s.Raise
 
 import scala.annotation.tailrec
 
-object RaiseInstances {
+trait RaiseInstances {
 
   given catsRaiseInstancesForMonadError[Error]: MonadError[[A] =>> Raise[Error] ?=> A, Error] =
     new RaiseMonadError[Error]

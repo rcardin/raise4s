@@ -1,7 +1,7 @@
 package in.rcard.raise4s.cats.instances
 
 import in.rcard.raise4s.Raise
-import in.rcard.raise4s.cats.instances.RaiseInstances.RaiseMonadError
+import in.rcard.raise4s.cats.instances.raise.RaiseMonadError
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
