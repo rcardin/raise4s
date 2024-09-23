@@ -112,7 +112,7 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   CatsRaise.validated { raise("error") } should be(Validated. invalid("error"))
   ```
   
-- Use the `RaiseMonadError[E]` to integrate with your existing code that uses `MonadError[E]`.
+- Use the `RaiseMonadError[E]` to integrate with your existing code that uses `MonadError`.
 
   ```scala 3
   import in.rcard.raise4s.cats.instances.raise.given
