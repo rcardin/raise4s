@@ -40,7 +40,15 @@ lazy val `cats-raise4s` = project
   .settings(
     name         := "cats-raise4s",
     scalaVersion := scala3Version,
-    libraryDependencies ++= commonDependencies ++ `cats-raised4sDependencies`
+    libraryDependencies ++= commonDependencies ++ `cats-raise4sDependencies`
+  )
+
+lazy val `munit-raise4s` = project
+  .dependsOn(core)
+  .settings(
+    name         := "munit-raise4s",
+    scalaVersion := scala3Version,
+    libraryDependencies ++= commonDependencies ++ `munit-raise4sDependencies`
   )
 
 lazy val raise4s = (project in file("."))
@@ -59,6 +67,10 @@ lazy val commonDependencies = Seq(
   dependencies.scalatest % Test
 )
 
-lazy val `cats-raised4sDependencies` = Seq(
+lazy val `cats-raise4sDependencies` = Seq(
   "org.typelevel" %% "cats-core" % "2.12.0"
+)
+
+lazy val `munit-raise4sDependencies` = Seq(
+  "org.scalameta" %% "munit" % "1.0.2"
 )
