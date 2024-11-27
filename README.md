@@ -45,9 +45,9 @@ We can do better than that, using the `infix type raises`:
 def findUserById(id: String): User raises Error = User(id, "Alice")
 ```
 
-How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `String`.
+How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `Error` or any of its subtypes.
 
-The above function let us short-circuit an execution and raise an error of type `String` using the `raise` function:
+The above function let us short-circuit an execution and raise an error of type `UserNotFound` using the `raise` function:
 
 ```scala 3
 def findUserById(id: String): User raises Error =
