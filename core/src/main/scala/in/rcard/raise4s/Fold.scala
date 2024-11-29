@@ -1,5 +1,7 @@
 package in.rcard.raise4s
 
+import in.rcard.raise4s.Raise.mapOrAccumulate
+
 private[raise4s] inline def _mapOrAccumulate[Error, A, B](iterable: Iterable[A])(
     inline transform: Raise[Error] ?=> A => B
 )(using r: RaiseAcc[Error]): List[B] =
@@ -47,8 +49,41 @@ object RaiseIterableDef:
       * @return
       *   A list of the transformed elements of the iterable
       */
-    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using r: RaiseAcc[Error]): List[B] =
+    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using
+        r: RaiseAcc[Error]
+    ): List[B] =
       Raise.mapOrAccumulate(iterable)(transform)
+
+  extension [Error, A](iterable: Iterable[Raise[Error] ?=> A]) {
+
+    /** Accumulates the errors of executions of the elements of the iterable and returns a list of
+      * the values or the accumulated errors.
+     * 
+     * <h2>Example</h2>
+     * {{{
+     * val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5).map(value =>
+     *   if (value % 2 == 0) {
+     *     Raise.raise(value.toString)
+     *   } else {
+     *     value
+     *   }
+     * )
+     * val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+     * val actual = Raise.fold(
+     *   iterableWithRaiseAcc,
+     *   identity,
+     *   identity
+     * )
+     * actual shouldBe List("2", "4")
+     * }}}
+      *
+      * @return
+      *   The list of the values or the accumulated errors
+      */
+    inline def values: RaiseAcc[Error] ?=> List[A] = {
+      Raise.mapOrAccumulate(iterable)(identity)
+    }
+  }
 
 private[raise4s] inline def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
     inline action1: Raise[Error] ?=> A,
