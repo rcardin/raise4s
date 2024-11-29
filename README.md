@@ -210,11 +210,25 @@ error is raised, the function will return a List[User]. There is also a version 
 defined as extension method of any `Iterable[A]` type:
 
 ```scala 3
+import in.rcard.raise4s.RaiseIterableDef.mapOrAccumulate
+
 def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
   ids.mapOrAccumulate { id =>
     findUserById(id)
   }
 ```
+
+We can obtain the same result using the `values` extension function:
+
+```scala 3
+import in.rcard.raise4s.RaiseIterableDef.values
+
+def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
+  val usersOrErrors: List[User raises UserNotFound] = ids.map(id => findUserById(id))
+  usersOrErrors.values
+```
+
+Did anyone say `traverse`?
 
 ### Zipping Errors
 

@@ -1,6 +1,7 @@
 package in.rcard.raise4s
 
 import in.rcard.raise4s.RaiseIterableDef.mapOrAccumulate
+import in.rcard.raise4s.RaiseIterableDef.values
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -108,6 +109,39 @@ class FoldSpec extends AnyFlatSpec with Matchers {
 
     val actual = Raise.fold(
       block,
+      identity,
+      identity
+    )
+
+    actual shouldBe List("2", "4")
+  }
+
+  "Values extension method" should "extract the values from the iterable" in {
+    val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5)
+    val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithRaiseAcc,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(1, 2, 3, 4, 5)
+  }
+
+  it should "accumulate all the errors" in {
+    val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5).map(value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    )
+
+    val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithRaiseAcc,
       identity,
       identity
     )
