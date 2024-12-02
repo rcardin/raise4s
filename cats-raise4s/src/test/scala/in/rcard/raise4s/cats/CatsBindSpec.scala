@@ -1,8 +1,8 @@
 package in.rcard.raise4s.cats
 
 import cats.data.*
-import in.rcard.raise4s.Raise
-import in.rcard.raise4s.cats.CatsBind.value
+import in.rcard.raise4s.cats.CatsBind.{value, values}
+import in.rcard.raise4s.{Raise, raises}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -42,5 +42,44 @@ class CatsBindSpec extends AnyFlatSpec with Matchers {
     val actual: Int = Raise.recover(invalid.value) { err => if (err.head == "error") 2 else 3 }
 
     actual should be(2)
+  }
+
+  "values extension function" should "map all the element of the iterable" in {
+    val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5).map { value1 =>
+      value1 + 1
+    }
+
+    val iterableWithOuterRaise: List[Int] raises NonEmptyList[String] =
+      iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors" in {
+    val iterableWithInnerRaise: List[Int raises String] =
+      List(1, 2, 3, 4, 5).map { value =>
+        if (value % 2 == 0) {
+          Raise.raise(value.toString)
+        } else {
+          value
+        }
+      }
+
+    val iterableWithOuterRaise: List[Int] raises NonEmptyList[String] =
+      iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      identity,
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of("2", "4")
   }
 }

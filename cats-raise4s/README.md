@@ -60,6 +60,32 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   actual shouldBe List(2, 3, 4, 5, 6)
   ```
 
+- Use the `values` extension function to accumulate errors into a `NonEmptyList[E]` from a `Iterable[A raises E]` block.
+
+  ```scala 3
+  import in.rcard.raise4s.cats.CatsBind.values
+  
+  val iterableWithInnerRaise: List[Int raises String] =
+  List(1, 2, 3, 4, 5).map { value =>
+    if (value % 2 == 0) {
+      Raise.raise(value.toString)
+    } else {
+      value
+    }
+  }
+  
+  val iterableWithOuterRaise: List[Int] raises NonEmptyList[String] = 
+    iterableWithInnerRaise.values
+  
+  val actual = Raise.fold(
+    iterableWithOuterRaise,
+    identity,
+    identity
+  )
+  
+  actual shouldBe NonEmptyList.of("2", "4")
+  ```
+
 - Use the `Semigroup` type class to combine errors in the `zipOrAccumlateS` set of functions.
 
   ```scala 3
