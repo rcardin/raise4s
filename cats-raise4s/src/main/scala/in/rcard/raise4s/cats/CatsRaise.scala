@@ -99,6 +99,49 @@ object CatsRaise {
     )
     NonEmptyList.fromList(errors.toList).fold(results.toList)(r.raise)
 
+  /** Accumulate the errors obtained by executing the `transform` over every element of `iterable`.
+    * The error channel uses a [[NonEmptyList]] instance.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: NonEmptyList[Int] raises NonEmptyList[String] =
+    *   CatsRaise.mapOrAccumulate(NonEmptyList.of(1, 2, 3, 4, 5)) { value =>
+    *     if (value % 2 == 0) {
+    *       Raise.raise(value.toString)
+    *     } else {
+    *       value
+    *     }
+    *   }
+    * val actual = Raise.fold(
+    *   block,
+    *   identity,
+    *   identity
+    * )
+    * actual shouldBe NonEmptyList.of("2", "4")
+    * }}}
+    *
+    * @param nonEmptyList
+    *   The non-empty list of elements to transform
+    * @param transform
+    *   The transformation to apply to each element that can raise an error of type `Error`
+    * @param r
+    *   The Raise context
+    * @tparam Error
+    *   The type of the logical error that can be raised
+    * @tparam A
+    *   The type of the elements in the `iterable`
+    * @tparam B
+    *   The type of the transformed elements
+    * @return
+    *   A non-empty list of transformed elements
+    */
+  inline def mapOrAccumulate[Error, A, B](nonEmptyList: NonEmptyList[A])(
+      inline transform: Raise[Error] ?=> A => B
+  )(using r: RaiseNel[Error]): NonEmptyList[B] =
+    val resultAsList = CatsRaise.mapOrAccumulate(nonEmptyList.toList)(transform)
+    // We know it's safe to call get here because we started from an non-empty list
+    NonEmptyList.fromList(resultAsList).get
+
   /** Accumulate the errors from running `action1`, `action2`, `action3`, `action4`, `action5`,
     * `action6`, `action7`, `action8`, and `action9`, or accumulate all the occurred errors using
     * the [[Semigroup]] type class defined on the `Error` type. The tailing `S` in the name of the

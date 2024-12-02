@@ -82,4 +82,43 @@ class CatsBindSpec extends AnyFlatSpec with Matchers {
 
     actual shouldBe NonEmptyList.of("2", "4")
   }
+
+  "values extension function on non-empty list" should "map all the element of the non-empty list" in {
+    val nonEmptyListWithInnerRaise: NonEmptyList[Int raises String] = NonEmptyList.of(1, 2, 3, 4, 5).map { value1 =>
+      value1 + 1
+    }
+
+    val nonEmptyWithOuterRaise: NonEmptyList[Int] raises NonEmptyList[String] =
+      nonEmptyListWithInnerRaise.values
+
+    val actual = Raise.fold(
+      nonEmptyWithOuterRaise,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors" in {
+    val nonEmptyListWithInnerRaise: NonEmptyList[Int raises String] =
+      NonEmptyList.of(1, 2, 3, 4, 5).map { value =>
+        if (value % 2 == 0) {
+          Raise.raise(value.toString)
+        } else {
+          value
+        }
+      }
+
+    val nonEmptyWithOuterRaise: NonEmptyList[Int] raises NonEmptyList[String] =
+      nonEmptyListWithInnerRaise.values
+
+    val actual = Raise.fold(
+      nonEmptyWithOuterRaise,
+      identity,
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of("2", "4")
+  }
 }
