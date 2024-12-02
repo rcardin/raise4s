@@ -1,8 +1,8 @@
 package in.rcard.raise4s.cats
 
 import cats.data.*
-import in.rcard.raise4s.cats.CatsBind.{value, values}
-import in.rcard.raise4s.{Raise, raises}
+import in.rcard.raise4s.cats.CatsBind.{value, values, combineErrorsS}
+import in.rcard.raise4s.{Raise, raises, Raise as value}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -120,5 +120,43 @@ class CatsBindSpec extends AnyFlatSpec with Matchers {
     )
 
     actual shouldBe NonEmptyList.of("2", "4")
+  }
+
+  "combineErrorS on Semigroup[Error]" should "map all the element of the iterable" in {
+    val iterableWithInnerRaise: List[Int raises String] =
+      List(1, 2, 3, 4, 5).map { value1 =>
+        value1 + 1
+      }
+
+    val iterableWithOuterRaise: List[Int] raises String = iterableWithInnerRaise.combineErrorsS
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors using the combine function" in {
+    val iterableWithInnerRaise: List[Int raises String] =
+      List(1, 2, 3, 4, 5).map { value =>
+        if (value % 2 == 0) {
+          Raise.raise(value.toString)
+        } else {
+          value
+        }
+      }
+
+    val iterableWithOuterRaise: List[Int] raises String = iterableWithInnerRaise.combineErrorsS
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      identity,
+      identity
+    )
+
+    actual shouldBe "24"
   }
 }
