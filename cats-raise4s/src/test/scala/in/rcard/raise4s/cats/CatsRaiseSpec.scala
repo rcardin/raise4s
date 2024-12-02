@@ -3,7 +3,7 @@ package in.rcard.raise4s.cats
 import cats.Semigroup
 import cats.data.{NonEmptyChain, NonEmptyList, Validated}
 import in.rcard.raise4s.RaiseAnyPredef.raise
-import in.rcard.raise4s.{Raise, raises}
+import in.rcard.raise4s.{Raise, raises, Raise as value}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -67,6 +67,40 @@ class CatsRaiseSpec extends AnyFlatSpec with Matchers {
   it should "accumulate all the errors" in {
     val block: List[Int] raises NonEmptyList[String] =
       CatsRaise.mapOrAccumulate(List(1, 2, 3, 4, 5)) { value =>
+        if (value % 2 == 0) {
+          Raise.raise(value.toString)
+        } else {
+          value
+        }
+      }
+
+    val actual = Raise.fold(
+      block,
+      identity,
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of("2", "4")
+  }
+
+  "mapOrAccumulate on a NonEmptyList to NonEmptyList" should "map all the element of the iterable" in {
+    val block: NonEmptyList[Int] raises NonEmptyList[String] =
+      CatsRaise.mapOrAccumulate(NonEmptyList.of(1, 2, 3, 4, 5)) { value1 =>
+        value1 + 1
+      }
+
+    val actual = Raise.fold(
+      block,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors" in {
+    val block: NonEmptyList[Int] raises NonEmptyList[String] =
+      CatsRaise.mapOrAccumulate(NonEmptyList.of(1, 2, 3, 4, 5)) { value =>
         if (value % 2 == 0) {
           Raise.raise(value.toString)
         } else {
