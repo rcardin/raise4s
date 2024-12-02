@@ -41,7 +41,7 @@ object CatsRaise {
     *   The Raise context
     * @tparam Error
     *   The type of the logical error that can be raised. It must have a [[Semigroup]] instance
-    *   available available
+    *   available
     * @tparam A
     *   The type of the elements in the `iterable`
     * @tparam B
