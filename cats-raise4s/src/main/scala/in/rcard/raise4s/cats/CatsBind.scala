@@ -71,7 +71,7 @@ object CatsBind {
      * }}}
      *
      * @param semigroup The semigroup to combine the errors defined on the type `Error`
-     * @return The list of the values or the accumulated errors
+     * @return The list of the values or the accumulated error
      */
     inline def combineErrorsS(using semigroup: Semigroup[Error]): Raise[Error] ?=> List[A] =
       CatsRaise.mapOrAccumulateS(iterable)(identity)
@@ -108,4 +108,34 @@ object CatsBind {
       */
     inline def values: RaiseNel[Error] ?=> NonEmptyList[A] =
       CatsRaise.mapOrAccumulate(nonEmptyList)(identity)
+
+    /**
+     * Accumulates all the occurred errors using the combine operator of the implicit [[Semigroup]]  and returns
+     * the non-empty list of the values or the accumulated errors.
+     *
+     * <h2>Example</h2>
+     * {{{
+     * val iterableWithInnerRaise: NonEmptyList[Int raises String] =
+     *   NonEmptyList.of(1, 2, 3, 4, 5).map { value =>
+     *     if (value % 2 == 0) {
+     *       Raise.raise(value.toString)
+     *     } else {
+     *       value
+     *     }
+     *   }
+     * val iterableWithOuterRaise: NonEmptyList[Int] raises String =
+     *   iterableWithInnerRaise.combineErrorsS
+     * val actual = Raise.fold(
+     *   iterableWithOuterRaise,
+     *   identity,
+     *   identity
+     * )
+     * actual shouldBe "24"
+     * }}}
+     *
+     * @param semigroup The semigroup to combine the errors defined on the type `Error`
+     * @return The non-empty list of the values or the accumulated error
+     */
+    inline def combineErrorsS(using semigroup: Semigroup[Error]): Raise[Error] ?=> NonEmptyList[A] =
+      CatsRaise.mapOrAccumulateS(nonEmptyList)(identity)
 }
