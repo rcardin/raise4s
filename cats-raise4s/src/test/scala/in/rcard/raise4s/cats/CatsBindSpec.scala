@@ -159,4 +159,42 @@ class CatsBindSpec extends AnyFlatSpec with Matchers {
 
     actual shouldBe "24"
   }
+
+  "combineErrorS on NonEmptyList" should "map all the element of the iterable" in {
+    val iterableWithInnerRaise: NonEmptyList[Int raises String] =
+      NonEmptyList.of(1, 2, 3, 4, 5).map { value1 =>
+        value1 + 1
+      }
+
+    val iterableWithOuterRaise: NonEmptyList[Int] raises String = iterableWithInnerRaise.combineErrorsS
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe NonEmptyList.of(2, 3, 4, 5, 6)
+  }
+
+  it should "accumulate all the errors using the combine function" in {
+    val iterableWithInnerRaise: NonEmptyList[Int raises String] =
+      NonEmptyList.of(1, 2, 3, 4, 5).map { value =>
+        if (value % 2 == 0) {
+          Raise.raise(value.toString)
+        } else {
+          value
+        }
+      }
+
+    val iterableWithOuterRaise: NonEmptyList[Int] raises String = iterableWithInnerRaise.combineErrorsS
+
+    val actual = Raise.fold(
+      iterableWithOuterRaise,
+      identity,
+      identity
+    )
+
+    actual shouldBe "24"
+  }
 }
