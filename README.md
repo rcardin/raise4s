@@ -188,7 +188,7 @@ val usdAmount: Double =
 
 ### Accumulating Errors
 
-What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids
+What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids,
 and we want to retrieve all the associated users.
 
 ```scala 3
@@ -288,6 +288,33 @@ object Salary {
 
 Many different versions of the function differ in the number of input parameters. The maximum number of single input
 parameters is 9. If we need more, we must apply the function recursively multiple times.
+
+### The New `accumulate` DSL
+
+Recently, we added an experimental DSL for error accumulation inspired by the [new Arrow 2.0 library](https://arrow-kt.io/community/blog/2024/12/05/arrow-2-0/#simple-accumulation-in-raise). We decided to try a more user-friendly DSL instead of the exoteric `mapOrAccumulate` and `zipAccumulate` functions, called `accumulate`:
+
+```scala 3
+object Salary {
+  def apply(amount: Double, currency: String): Salary raises List[SalaryError] = 
+    accumulate {
+      val validatedAmount = accumulating {
+        ensure[SalaryError](amount >= 0.0)(NegativeAmount)
+        amount
+      }
+      val validatedCurrency = accumulating {
+        ensure[SalaryError](currency != null && currency.matches("[A-Z]{3}")) {
+          InvalidCurrency("Currency must be not empty and valid")
+        }
+        currency
+      }
+      Salary(validatedAmount, validatedCurrency)
+    }
+}
+```
+
+The `accumulate` and `accumulating` functions are defined in the `in.rcard.raise4s.Accumulation` object. As you can see, no more lambda tuples are needed. Every raised error is intercepted and accumulated in a list of errors inside the `accumulating` block. The `accumulate` function will return the happy path or a list of errors.
+
+The `accumulating` function returns an instance of the `Value[A]` type and not an instance of the validated `A` object itself. The first time the `Value[A]` instance is used, the library performs an implicit conversion to the `A` object under the hood. The implicit conversion will raise the accumulated errors if there is an error during the validation.
 
 ### Conversion to Wrapped Types
 
