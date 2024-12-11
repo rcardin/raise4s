@@ -13,7 +13,7 @@ Integration of the Raise DSL with some useful Cats data structures.
 The library is available on Maven Central. To use it, add the following dependency to your `build.sbt` files:
 
 ```sbt
-libraryDependencies += "in.rcard.raise4s" %% "cats-raise4s" % "0.3.0"
+libraryDependencies += "in.rcard.raise4s" %% "cats-raise4s" % "0.4.0"
 ```
 
 The library is only available for Scala 3.
