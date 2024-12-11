@@ -316,6 +316,27 @@ The `accumulate` and `accumulating` functions are defined in the `in.rcard.raise
 
 The `accumulating` function returns an instance of the `Value[A]` type and not an instance of the validated `A` object itself. The first time the `Value[A]` instance is used, the library performs an implicit conversion to the `A` object under the hood. The implicit conversion will raise the accumulated errors if there is an error during the validation.
 
+We can also use the `accumulate` API to mimic the behavior of the `mapOrAccumulate` function. For example, we can rewrite the `findUsersByIds` function as follows:
+
+```scala 3
+import in.rcard.raise4s.Accumulation.*
+
+def findUsersByIds(ids: List[String]): List[User] raises List[Error] = accumulate {
+  val users = ids.map(id => accumulating { findUserById(id) })
+  users
+}
+```
+
+The above code uses another implicit conversion under the hood. It's converting from a `List[Value[Error, User]]` to a `List[User] raises List[Error]`. In case you want to remove the extra `users` variable, you need to help the compiler understand the return type of the `map` function:
+
+```scala 3
+def findUsersByIds(ids: List[String]): List[User] raises List[Error] = accumulate {
+  ids.map[Value[Error, User]](id => accumulating { findUserById(id) })
+}
+```
+
+If we don't force the `map` function to return a `Value[Error, User]` instance, the compiler will infer the return type as `List[User]` and the implicit conversion for the single `Value[Error, User]` will be applied, instead of the one for the `List[Value[Error, User]]`.
+
 ### Conversion to Wrapped Types
 
 What if we want to convert a computation in the `Raise[E]` context to a function returning an `Either[E, A]`,

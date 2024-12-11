@@ -107,4 +107,69 @@ object Accumulation {
       Value(using scope)
     }
   }
+
+  /** A type class to convert a container `MV[_]` of [[Value]]s to a container of values. The error
+    * raised during the conversion must be accumulated into a container `ME[_]` of errors.
+    * @tparam ME
+    *   The type of the container of errors
+    * @tparam MV
+    *   The type of the container of [[Value]]s
+    */
+  trait ValuesConverter[ME[_], MV[_]] {
+    private type RaiseM[Error] = Raise[ME[Error]]
+    def convert[Error: RaiseM, A](convertible: MV[Value[Error, A]]): MV[A]
+  }
+
+  /** A type class to convert a container `M[_]` of [[Value]]s to a container of values accumulating
+    * errors into a [[RaiseAcc]] container.
+    * @tparam M
+    *   The type of the container of [[Value]]s
+    */
+  trait RaiseAccValuesConverter[M[_]] extends ValuesConverter[List, M] {
+    def convert[Error: RaiseAcc, A](convertible: M[Value[Error, A]]): M[A]
+  }
+
+  /** A type class instance to convert a container `List[Value[Error, A]]` to a container `List[A]`
+    * accumulating errors into a [[RaiseAcc]] container.
+    *
+    * @see
+    *   [[Value]]
+    */
+  given listRaiseAccValuesConverter: RaiseAccValuesConverter[List] with
+    def convert[Error: RaiseAcc, A](convertible: List[Value[Error, A]]): List[A] =
+      convertible.map(_.value)
+
+  /** Implicit conversion between a container `M[Value[Error, A]]` and a container `M[A]`
+    * accumulating errors into a [[RaiseAcc]] container.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * val block: List[Int] raises List[String] = accumulate {
+    *   List(1, 2, 3, 4, 5).map[Accumulation.Value[String, Int]] { i =>
+    *     accumulating {
+    *       if (i % 2 == 0) {
+    *         Raise.raise(i.toString)
+    *       } else {
+    *         i
+    *       }
+    *     }
+    *   }
+    * }
+    *
+    * val actual = Raise.fold(
+    *   block,
+    *   identity,
+    *   identity
+    * )
+    *
+    * actual shouldBe List("2", "4")
+    * }}}
+    *
+    * @see
+    *   [[Value]]
+    */
+  given raiseAccValuesConversion[Error: RaiseAcc, A, M[_]: RaiseAccValuesConverter]
+      : Conversion[M[Value[Error, A]], M[A]] with
+    def apply(convertible: M[Value[Error, A]]): M[A] =
+      summon[RaiseAccValuesConverter[M]].convert(convertible)
 }
