@@ -13,7 +13,7 @@ Integration of the Raise DSL with some useful Cats data structures.
 The library is available on Maven Central. To use it, add the following dependency to your `build.sbt` files:
 
 ```sbt
-libraryDependencies += "in.rcard.raise4s" %% "cats-raise4s" % "0.2.0"
+libraryDependencies += "in.rcard.raise4s" %% "cats-raise4s" % "0.4.0"
 ```
 
 The library is only available for Scala 3.
@@ -58,6 +58,126 @@ In general, the integration lets you use the _Cats_ type classes with the _Raise
   )
   
   actual shouldBe List(2, 3, 4, 5, 6)
+  ```
+
+- Use of the `NonEmptyList` data class to handle both the results and the errors in the `mapOrAccumulate` function.
+
+  ```scala 3
+  val block: NonEmptyList[Int] raises NonEmptyList[String] =
+    CatsRaise.mapOrAccumulate(NonEmptyList.of(1, 2, 3, 4, 5)) { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    }
+  val actual = Raise.fold(
+    block,
+    identity,
+    identity
+  )
+  actual shouldBe NonEmptyList.of("2", "4")
+  ```
+
+- Use the `values` extension function to accumulate errors into a `NonEmptyList[E]` from a `Iterable[A raises E]` block.
+
+  ```scala 3
+  import in.rcard.raise4s.cats.CatsBind.values
+  
+  val iterableWithInnerRaise: List[Int raises String] =
+  List(1, 2, 3, 4, 5).map { value =>
+    if (value % 2 == 0) {
+      Raise.raise(value.toString)
+    } else {
+      value
+    }
+  }
+  
+  val iterableWithOuterRaise: List[Int] raises NonEmptyList[String] = 
+    iterableWithInnerRaise.values
+  
+  val actual = Raise.fold(
+    iterableWithOuterRaise,
+    identity,
+    identity
+  )
+  
+  actual shouldBe NonEmptyList.of("2", "4")
+  ```
+
+- Use the `values` extension function to accumulate errors into a `NonEmptyList[E]` from a `NonEmptyList[A raises E]` block.
+
+  ```scala 3
+  import in.rcard.raise4s.cats.CatsBind.values
+  
+  val iterableWithInnerRaise: List[Int raises String] =
+    List(1, 2, 3, 4, 5).map { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    }
+  val iterableWithOuterRaise: List[Int] raises NonEmptyList[String] =
+    iterableWithInnerRaise.values
+  val actual = Raise.fold(
+    iterableWithOuterRaise,
+    identity,
+    identity
+  )
+  actual shouldBe NonEmptyList.of("2", "4")
+  ```
+
+- Use the `combineErrorsS` with a `Semigroup` instance to accumulate errors into a `E` from a `Iterable[A raises E]` block.
+
+  ```scala 3
+  import cats.data.*
+  import in.rcard.raise4s.cats.CatsBind.combineErrorsS
+
+  val iterableWithInnerRaise: List[Int raises String] =
+    List(1, 2, 3, 4, 5).map { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    }
+
+  val iterableWithOuterRaise: List[Int] raises String = iterableWithInnerRaise.combineErrorsS
+  
+  val actual = Raise.fold(
+    iterableWithOuterRaise,
+    identity,
+    identity
+  )
+  
+  actual shouldBe "24"
+  ```
+
+- Use the `combineErrorsS` with a `Semigroup` instance to accumulate errors into a `E` from a `NonEmptyList[A raises E]` block.
+
+  ```scala 3
+  import cats.data.*
+  import in.rcard.raise4s.cats.CatsBind.combineErrorsS
+
+  val iterableWithInnerRaise: NonEmptyList[Int raises String] =
+    NonEmptyList.of(1, 2, 3, 4, 5).map { value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    }
+
+  val iterableWithOuterRaise: NonEmptyList[Int] raises String = iterableWithInnerRaise.combineErrorsS
+  
+  val actual = Raise.fold(
+    iterableWithOuterRaise,
+    identity,
+    identity
+  )
+  
+  actual shouldBe "24"
   ```
 
 - Use the `Semigroup` type class to combine errors in the `zipOrAccumlateS` set of functions.

@@ -12,7 +12,7 @@ Porting of the Raise DSL from the Arrow Kt Kotlin library
 The library is available on Maven Central. To use it, add the following dependency to your `build.sbt` files:
 
 ```sbt
-libraryDependencies += "in.rcard.raise4s" %% "core" % "0.2.0"
+libraryDependencies += "in.rcard.raise4s" %% "core" % "0.4.0"
 ```
 
 The library is only available for Scala 3.
@@ -45,9 +45,9 @@ We can do better than that, using the `infix type raises`:
 def findUserById(id: String): User raises Error = User(id, "Alice")
 ```
 
-How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `String`.
+How do we read the above syntax? The function `findUserById` returns a `User` and can raise an error of type `Error` or any of its subtypes.
 
-The above function let us short-circuit an execution and raise an error of type `String` using the `raise` function:
+The above function let us short-circuit an execution and raise an error of type `UserNotFound` using the `raise` function:
 
 ```scala 3
 def findUserById(id: String): User raises Error =
@@ -188,7 +188,7 @@ val usdAmount: Double =
 
 ### Accumulating Errors
 
-What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids
+What if we want to accumulate more than one error in a dedicated data structure? For example, say we have a list of ids,
 and we want to retrieve all the associated users.
 
 ```scala 3
@@ -210,11 +210,25 @@ error is raised, the function will return a List[User]. There is also a version 
 defined as extension method of any `Iterable[A]` type:
 
 ```scala 3
+import in.rcard.raise4s.RaiseIterableDef.mapOrAccumulate
+
 def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
   ids.mapOrAccumulate { id =>
     findUserById(id)
   }
 ```
+
+We can obtain the same result using the `values` extension function:
+
+```scala 3
+import in.rcard.raise4s.RaiseIterableDef.values
+
+def findUsersByIds(ids: List[String]): List[User] raises List[UserNotFound] =
+  val usersOrErrors: List[User raises UserNotFound] = ids.map(id => findUserById(id))
+  usersOrErrors.values
+```
+
+Did anyone say `traverse`?
 
 ### Zipping Errors
 
@@ -274,6 +288,54 @@ object Salary {
 
 Many different versions of the function differ in the number of input parameters. The maximum number of single input
 parameters is 9. If we need more, we must apply the function recursively multiple times.
+
+### The New `accumulate` DSL
+
+Recently, we added an experimental DSL for error accumulation inspired by the [new Arrow 2.0 library](https://arrow-kt.io/community/blog/2024/12/05/arrow-2-0/#simple-accumulation-in-raise). We decided to try a more user-friendly DSL instead of the exoteric `mapOrAccumulate` and `zipAccumulate` functions, called `accumulate`:
+
+```scala 3
+object Salary {
+  def apply(amount: Double, currency: String): Salary raises List[SalaryError] = 
+    accumulate {
+      val validatedAmount = accumulating {
+        ensure[SalaryError](amount >= 0.0)(NegativeAmount)
+        amount
+      }
+      val validatedCurrency = accumulating {
+        ensure[SalaryError](currency != null && currency.matches("[A-Z]{3}")) {
+          InvalidCurrency("Currency must be not empty and valid")
+        }
+        currency
+      }
+      Salary(validatedAmount, validatedCurrency)
+    }
+}
+```
+
+The `accumulate` and `accumulating` functions are defined in the `in.rcard.raise4s.Accumulation` object. As you can see, no more lambda tuples are needed. Every raised error is intercepted and accumulated in a list of errors inside the `accumulating` block. The `accumulate` function will return the happy path or a list of errors.
+
+The `accumulating` function returns an instance of the `Value[A]` type and not an instance of the validated `A` object itself. The first time the `Value[A]` instance is used, the library performs an implicit conversion to the `A` object under the hood. The implicit conversion will raise the accumulated errors if there is an error during the validation.
+
+We can also use the `accumulate` API to mimic the behavior of the `mapOrAccumulate` function. For example, we can rewrite the `findUsersByIds` function as follows:
+
+```scala 3
+import in.rcard.raise4s.Accumulation.*
+
+def findUsersByIds(ids: List[String]): List[User] raises List[Error] = accumulate {
+  val users = ids.map(id => accumulating { findUserById(id) })
+  users
+}
+```
+
+The above code uses another implicit conversion under the hood. It's converting from a `List[Value[Error, User]]` to a `List[User] raises List[Error]`. In case you want to remove the extra `users` variable, you need to help the compiler understand the return type of the `map` function:
+
+```scala 3
+def findUsersByIds(ids: List[String]): List[User] raises List[Error] = accumulate {
+  ids.map[Value[Error, User]](id => accumulating { findUserById(id) })
+}
+```
+
+If we don't force the `map` function to return a `Value[Error, User]` instance, the compiler will infer the return type as `List[User]` and the implicit conversion for the single `Value[Error, User]` will be applied, instead of the one for the `List[Value[Error, User]]`.
 
 ### Conversion to Wrapped Types
 

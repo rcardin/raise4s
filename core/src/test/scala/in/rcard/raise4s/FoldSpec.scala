@@ -1,6 +1,6 @@
 package in.rcard.raise4s
 
-import in.rcard.raise4s.RaiseIterableDef.mapOrAccumulate
+import in.rcard.raise4s.RaiseIterableDef.{combineErrors, mapOrAccumulate, values}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -115,6 +115,39 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     actual shouldBe List("2", "4")
   }
 
+  "Values extension method" should "extract the values from the iterable" in {
+    val iterableWithInnerRaise: List[Int raises String]     = List(1, 2, 3, 4, 5)
+    val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithRaiseAcc,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(1, 2, 3, 4, 5)
+  }
+
+  it should "accumulate all the errors" in {
+    val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5).map(value =>
+      if (value % 2 == 0) {
+        Raise.raise(value.toString)
+      } else {
+        value
+      }
+    )
+
+    val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+
+    val actual = Raise.fold(
+      iterableWithRaiseAcc,
+      identity,
+      identity
+    )
+
+    actual shouldBe List("2", "4")
+  }
+
   case class MyError2(errors: List[String])
   def combineErrors(error1: MyError2, error2: MyError2): MyError2 =
     MyError2(error1.errors ++ error2.errors)
@@ -181,6 +214,41 @@ class FoldSpec extends AnyFlatSpec with Matchers {
     )
 
     actual shouldBe List("2", "4")
+  }
+
+  "combineErrors extension function" should "map all the element of the iterable" in {
+    val iterableWithInnerRaise: List[Int raises MyError2] = List(1, 2, 3, 4, 5)
+    val iterableWithErrorsCombined: List[Int] raises MyError2 =
+      iterableWithInnerRaise.combineErrors(combineErrors)
+
+    val actual = Raise.fold(
+      iterableWithErrorsCombined,
+      error => fail(s"An error occurred: $error"),
+      identity
+    )
+
+    actual shouldBe List(1, 2, 3, 4, 5)
+  }
+
+  it should "accumulate all the errors using the combine function" in {
+    val iterableWithInnerRaise: List[Int raises MyError2] = List(1, 2, 3, 4, 5).map(value =>
+      if (value % 2 == 0) {
+        Raise.raise(MyError2(List(value.toString)))
+      } else {
+        value
+      }
+    )
+
+    val iterableWithErrorsCombined: List[Int] raises MyError2 =
+      iterableWithInnerRaise.combineErrors(combineErrors)
+
+    val actual = Raise.fold(
+      iterableWithErrorsCombined,
+      identity,
+      identity
+    )
+
+    actual shouldBe MyError2(List("2", "4"))
   }
 
   "zipOrAccumulate" should "zip 9 elements" in {

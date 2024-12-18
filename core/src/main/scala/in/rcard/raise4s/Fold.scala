@@ -47,8 +47,72 @@ object RaiseIterableDef:
       * @return
       *   A list of the transformed elements of the iterable
       */
-    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using r: RaiseAcc[Error]): List[B] =
+    inline def mapOrAccumulate(inline transform: Raise[Error] ?=> A => B)(using
+        r: RaiseAcc[Error]
+    ): List[B] =
       Raise.mapOrAccumulate(iterable)(transform)
+
+  extension [Error, A](iterable: Iterable[Raise[Error] ?=> A]) {
+
+    /** Accumulates the errors of executions of the elements of the iterable and returns a list of
+      * the values or the accumulated errors.
+      *
+      * <h2>Example</h2>
+      * {{{
+      * val iterableWithInnerRaise: List[Int raises String] = List(1, 2, 3, 4, 5).map(value =>
+      *   if (value % 2 == 0) {
+      *     Raise.raise(value.toString)
+      *   } else {
+      *     value
+      *   }
+      * )
+      * val iterableWithRaiseAcc: List[Int] raises List[String] = iterableWithInnerRaise.values
+      * val actual = Raise.fold(
+      *   iterableWithRaiseAcc,
+      *   identity,
+      *   identity
+      * )
+      * actual shouldBe List("2", "4")
+      * }}}
+      *
+      * @return
+      *   The list of the values or the accumulated errors
+      */
+    inline def values: RaiseAcc[Error] ?=> List[A] = {
+      Raise.mapOrAccumulate(iterable)(identity)
+    }
+
+    /** Accumulates all the occurred errors using `combine` and returns the list of the values or
+      * the accumulated errors.
+      *
+      * <h2>Example</h2>
+      * {{{
+      * val iterableWithInnerRaise: List[Int raises MyError2] = List(1, 2, 3, 4, 5).map(value =>
+      *   if (value % 2 == 0) {
+      *     Raise.raise(MyError2(List(value.toString)))
+      *   } else {
+      *     value
+      *   }
+      * )
+      * val iterableWithErrorsCombined: List[Int] raises MyError2 =
+      *   iterableWithInnerRaise.combineErrors(combineErrors)
+      * val actual = Raise.fold(
+      *   iterableWithErrorsCombined,
+      *   identity,
+      *   identity
+      * )
+      * actual shouldBe MyError2(List("2", "4"))
+      * }}}
+      *
+      * @param combine
+      *   The function to combine two errors
+      * @return
+      *   The list of the values or the accumulated errors
+      */
+    inline def combineErrors(inline combine: (Error, Error) => Error): Raise[Error] ?=> List[A] = {
+      Raise.mapOrAccumulate(iterable, combine)(identity)
+    }
+  }
 
 private[raise4s] inline def _zipOrAccumulate[Error, A, B, C, D, E, F, G, H, I, J](
     inline action1: Raise[Error] ?=> A,
