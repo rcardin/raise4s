@@ -3,9 +3,17 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/rcardin/raise4s)
 [![javadoc](https://javadoc.io/badge2/in.rcard.raise4s/core_3/javadoc.svg)](https://javadoc.io/doc/in.rcard.raise4s/core_3)
 
-# raise4s
+# Raise4s
 
-Porting of the Raise DSL from the Arrow Kt Kotlin library
+Initially, the library was a port of the Raise DSL from the Arrow Kt Kotlin library. Now, it has diverged from the original library and has become a new library, implementing the effect of failing with a typed error.
+
+Available modules are:
+
+- `core`: The Raise DSL for Scala 3.
+- `cats-raise4s`: The Raise DSL for Scala 3 with some useful Cats data structures.
+- `munit'raise4s`: MUnit integration for the Raise DSL.
+
+(See the README.md files in the subdirectories for more information.)
 
 ## Dependency
 
