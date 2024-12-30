@@ -1,7 +1,7 @@
 package in.rcard.raise4s
 
-import in.rcard.raise4s.Raise.raise
-import in.rcard.raise4s.Strategies.{MapError, anyRaised}
+import in.rcard.raise4s.Raise.{raise, traced}
+import in.rcard.raise4s.Strategies.{MapError, TraceWith, anyRaised}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -38,5 +38,39 @@ class StrategiesSpec extends AnyFlatSpec with Matchers {
     }
     val result: Int | String = Raise.run(finalLambda)
     result shouldBe "Hello"
+  }
+
+  "TraceWith" should "allow defining a strategy that trace the error and return it" in {
+    val queue = collection.mutable.ListBuffer.empty[String]
+    given TraceWith[String] = trace => {
+      queue += trace.original
+      trace.printStackTrace()
+    }
+
+    val lambda: Int raises String = traced {
+      raise("Oops!")
+    }
+
+    val actual: String | Int = Raise.run(lambda)
+
+    actual shouldBe "Oops!"
+    queue should contain("Oops!")
+  }
+
+  it should "return the happy path value if no error is raised" in {
+    val queue = collection.mutable.ListBuffer.empty[String]
+    given TraceWith[String] = trace => {
+      queue += trace.original
+      trace.printStackTrace()
+    }
+
+    val lambda: Int raises String = traced {
+      42
+    }
+
+    val actual: Int | String = Raise.run(lambda)
+
+    actual shouldBe 42
+    queue shouldBe empty
   }
 }

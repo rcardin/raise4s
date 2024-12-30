@@ -536,6 +536,28 @@ val usdAmount: Double = Raise.recoverable {
 The strategy lets us define how to recover from a typed error in a dedicated place, leaving the happy logic in the main
 block.
 
+### Tracing
+
+When a logical error is raised, the library will not print any information about the error by default. Sometimes, it's useful for debugging purposes to have a trace of the error. The library allows you to define a strategy called `TraceWith` that processes the error together with a stack trace that identifies where the error was raised.
+
+To enable tracing for a specific code block, wrap it inside the `trace` DSL and provide a `TraceWith` strategy:
+
+```scala 3
+import in.rcard.raise4s.Raise.{raise, traced}
+import in.rcard.raise4s.Strategies.TraceWith
+
+given TraceWith[String] = (trace: Traced) => {
+  trace.printStackTrace()
+}
+val lambda: Int raises String = traced {
+  raise("Oops!")
+}
+val actual: String | Int = Raise.run(lambda)
+actual shouldBe "Oops!"
+```
+
+The `Traced` exception the tracing engine uses contains the original typed error.
+
 ## Contributing
 
 If you want to contribute to the project, please do it! Any help is welcome.

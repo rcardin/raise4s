@@ -61,12 +61,53 @@ object Strategies {
     * actual should be(43)
     * }}}
     *
-    * @tparam Error The type of the error to recover from
-    * @tparam A The type of the value to return if the recovery is successful
-   *           
-   * @see [[Raise.recoverable]]
+    * @tparam Error
+    *   The type of the error to recover from
+    * @tparam A
+    *   The type of the value to return if the recovery is successful
+    *
+    * @see
+    *   [[Raise.recoverable]]
     */
   trait RecoverWith[Error, A] {
     def recover(error: Error): A
+  }
+
+  /** Implement the `raise` method to throw a [[Traced]] exception with the error to trace instead
+    * of a [[Raised]] exception.
+    */
+  private[raise4s] class TracedRaise extends Raise[Any]:
+    def raise(e: Any): Nothing = throw Traced(e)
+
+  /** The exception that wraps the original error in case of tracing. The difference with the [[Raised]] exception is that
+   * the exception contains a full stack trace.
+    * @param original
+    *   The original error to trace
+    * @tparam Error
+    *   The type of the error to trace
+    */
+  case class Traced[Error](original: Error) extends Exception
+
+  /** A strategy that allows to trace an error and return it. The [[trace]] method represent the
+    * behavior to trace the error. As a strategy, it should be used as a `given` instance. Use the
+    * type class instance with the [[Raise.traced]] DSL.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * given TraceWith[String] = trace => {
+    *   trace.printStackTrace()
+    * }
+    * val lambda: Int raises String = traced {
+    *   raise("Oops!")
+    * }
+    * val actual: String | Int = Raise.run(lambda)
+    * actual shouldBe "Oops!"
+    * }}}
+    *
+    * @tparam Error
+    *   The type of the error to trace
+    */
+  trait TraceWith[Error] {
+    def trace(traced: Traced[Error]): Unit
   }
 }
