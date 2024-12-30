@@ -61,12 +61,24 @@ object Strategies {
     * actual should be(43)
     * }}}
     *
-    * @tparam Error The type of the error to recover from
-    * @tparam A The type of the value to return if the recovery is successful
-   *           
-   * @see [[Raise.recoverable]]
+    * @tparam Error
+    *   The type of the error to recover from
+    * @tparam A
+    *   The type of the value to return if the recovery is successful
+    *
+    * @see
+    *   [[Raise.recoverable]]
     */
   trait RecoverWith[Error, A] {
     def recover(error: Error): A
+  }
+  
+  private[raise4s] class TracedRaise extends Raise[Any]:
+    def raise(e: Any): Nothing = throw Traced(e)
+
+  case class Traced[Error](original: Error) extends Exception
+
+  trait TraceWith[Error] {
+    def trace(traced: Traced[Error]): Unit
   }
 }

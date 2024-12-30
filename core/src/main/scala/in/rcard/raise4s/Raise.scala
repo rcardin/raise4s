@@ -1,7 +1,7 @@
 package in.rcard.raise4s
 
 import in.rcard.raise4s
-import in.rcard.raise4s.Strategies.RecoverWith
+import in.rcard.raise4s.Strategies.{RecoverWith, TraceWith, Traced, TracedRaise}
 
 import scala.annotation.targetName
 import scala.util.Try
@@ -1768,4 +1768,16 @@ object Raise {
     */
   inline def withDefault[Error, A](default: A)(inline block: Raise[Error] ?=> A): A =
     Raise.recover(block)(error => default)
+
+  inline def traced[Error, A](
+      inline block: Raise[Error] ?=> A
+  )(using inline tracing: TraceWith[Error]): Raise[Error] ?=> A = {
+    try {
+      given tracedRaise: Raise[Error] = new TracedRaise
+      block
+    } catch
+      case traced: Traced[Error] =>
+        tracing.trace(traced)
+        Raise.raise(traced.original)
+  }
 }
