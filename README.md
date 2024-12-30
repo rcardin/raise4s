@@ -11,7 +11,7 @@ Available modules are:
 
 - `core`: The Raise DSL for Scala 3.
 - `cats-raise4s`: The Raise DSL for Scala 3 with some useful Cats data structures.
-- `munit'raise4s`: MUnit integration for the Raise DSL.
+- `munit-raise4s`: MUnit integration for the Raise DSL.
 
 (See the README.md files in the subdirectories for more information.)
 
