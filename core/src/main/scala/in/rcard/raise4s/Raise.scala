@@ -1769,6 +1769,34 @@ object Raise {
   inline def withDefault[Error, A](default: A)(inline block: Raise[Error] ?=> A): A =
     Raise.recover(block)(error => default)
 
+  /** Add tracing to a block of code that can raise a logical error. In detail, the logical error is
+    * wrapped inside a [[Traced]] exception and processed by the [[TraceWith]] strategy instance.
+    * Please, be aware that adding tracing to an error can have a performance impact since a fat
+    * exception with a full stack trace is created.
+    *
+    * <h2>Example</h2>
+    * {{{
+    * given TraceWith[String] = trace => {
+    *   trace.printStackTrace()
+    * }
+    * val lambda: Int raises String = traced {
+    *   raise("Oops!")
+    * }
+    * val actual: String | Int = Raise.run(lambda)
+    * actual shouldBe "Oops!"
+    * }}}
+    *
+    * @param block
+    *   The block of code to execute that can raise an error
+    * @param tracing
+    *   The strategy to process the traced error
+    * @tparam Error
+    *   The type of the logical error that can be raised by the `block` lambda
+    * @tparam A
+    *   The type of the result of the execution of `block` lambda
+    * @return
+    *   The original block wrapped into a traced block
+    */
   inline def traced[Error, A](
       inline block: Raise[Error] ?=> A
   )(using inline tracing: TraceWith[Error]): Raise[Error] ?=> A = {
