@@ -72,5 +72,5 @@ lazy val `cats-raise4sDependencies` = Seq(
 )
 
 lazy val `munit-raise4sDependencies` = Seq(
-  "org.scalameta" %% "munit" % "1.0.4"
+  "org.scalameta" %% "munit" % "1.1.0"
 )
