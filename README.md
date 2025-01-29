@@ -38,6 +38,8 @@ The easiest way to define a function that can raise an error of type `E` is to c
 the `Raise[E]` the implicit parameter:
 
 ```scala 3
+import in.rcard.raise4s.*
+
 case class User(id: String, name: String)
 
 sealed trait Error
