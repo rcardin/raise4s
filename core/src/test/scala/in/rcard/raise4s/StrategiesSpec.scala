@@ -2,6 +2,7 @@ package in.rcard.raise4s
 
 import in.rcard.raise4s.Raise.{raise, traced}
 import in.rcard.raise4s.Strategies.{MapError, TraceWith, anyRaised}
+import in.rcard.raise4s.Strategies.MapError.mappedRaise
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -29,6 +30,15 @@ class StrategiesSpec extends AnyFlatSpec with Matchers {
     }
     val result: Int | String = Raise.run(finalLambda)
     result shouldBe 5
+  }
+
+  "MapError" should "allow raising the original error type" in {
+    val finalLambda: String raises Int = {
+      given MapError[String, Int] = error => error.length
+      raise(42)
+    }
+    val result: Int | String = Raise.run(finalLambda)
+    result shouldBe 42
   }
 
   it should "return the happy path value if no error is raised" in {
