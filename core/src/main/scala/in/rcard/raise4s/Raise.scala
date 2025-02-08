@@ -10,12 +10,12 @@ import scala.util.control.{ControlThrowable, NoStackTrace, NonFatal}
 trait Raise[-Error]:
   def raise(e: Error): Nothing
 
-private[raise4s] case class Raised[Error](original: Error)
+private[raise4s] case class Raised[Error](raise: DefaultRaise, original: Error)
     extends ControlThrowable
     with NoStackTrace
 
 private[raise4s] class DefaultRaise extends Raise[Any]:
-  def raise(e: Any): Nothing = throw Raised(e)
+  def raise(e: Any): Nothing = throw Raised(this, e)
 
 infix type raises[R, Error] = Raise[Error] ?=> R
 
@@ -282,7 +282,7 @@ object Raise {
 
     try transform(block)
     catch
-      case Raised(error) => recover(error.asInstanceOf[Error])
+      case Raised(raise2, error) if raise2 == raise => recover(error.asInstanceOf[Error])
       case NonFatal(e)   => catchBlock(e)
       case e: Throwable  => throw e
   }
@@ -1800,11 +1800,12 @@ object Raise {
   inline def traced[Error, A](
       inline block: Raise[Error] ?=> A
   )(using inline tracing: TraceWith[Error]): Raise[Error] ?=> A = {
-    try {
-      given tracedRaise: Raise[Error] = new TracedRaise
+    val tracedRaise: Raise[Error] = new TracedRaise
+    try { 
+      given Raise[Error] = tracedRaise
       block
     } catch
-      case traced: Traced[Error] =>
+      case traced: Traced[Error] if traced.raise == tracedRaise =>
         tracing.trace(traced)
         Raise.raise(traced.original)
   }

@@ -2,6 +2,7 @@ package in.rcard.raise4s
 
 import in.rcard.raise4s.Raise.catching
 import in.rcard.raise4s.Strategies.RecoverWith
+import in.rcard.raise4s.Bind.value
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -190,5 +191,31 @@ class RaiseSpec extends AnyFlatSpec with Matchers {
     }
 
     actual should be(Right(43))
+  }
+
+  it should "nest successfully with differently-typed instances" in {
+    val actual = Raise.either {
+      Raise.option {
+        Raise.raise("error")
+      }
+    }
+
+    actual should be(Left("error"))
+  }
+
+  it should "allow effect encapsulation" in {
+    def toIntOrDefault(block: () => String): Int = {
+      Raise.option {
+        val res: String = block()
+        res.toIntOption.value
+      }.getOrElse(42)
+    }
+    val actual = Raise.either {
+      toIntOrDefault { () =>
+        Raise.raise("error")
+      }
+    }
+
+    actual should be(Left("error"))
   }
 }

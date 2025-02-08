@@ -35,7 +35,7 @@ object Strategies {
     * @tparam To
     *   The error type to map to
     */
-  trait MapError[From, To] extends Raise[From] {
+  trait MapError[From, To] {
 
     /** Maps an error to another one.
       * @param error
@@ -44,10 +44,10 @@ object Strategies {
       *   The mapped error
       */
     def map(error: From): To
-
-    def raise(error: From): Nothing = throw Raised(map(error))
   }
-
+  object MapError {
+    given mappedRaise: [From, To] =>(r: Raise[To]) => (me: MapError[From, To]) => Raise[From] = (e: From) => r.raise(me.map(e))
+  }
   /** A strategy that allows to recover from an error of type [Error]. As a strategy, it should be
     * used as a `given` instance. If used with the [[Raise.recoverable]] DSL, its behavior is
     * comparable to the [[Raise.recover]] method.
@@ -77,7 +77,7 @@ object Strategies {
     * of a [[Raised]] exception.
     */
   private[raise4s] class TracedRaise extends Raise[Any]:
-    def raise(e: Any): Nothing = throw Traced(e)
+    def raise(e: Any): Nothing = throw Traced(this, e)
 
   /** The exception that wraps the original error in case of tracing. The difference with the [[Raised]] exception is that
    * the exception contains a full stack trace.
@@ -86,7 +86,7 @@ object Strategies {
     * @tparam Error
     *   The type of the error to trace
     */
-  case class Traced[Error](original: Error) extends Exception
+  case class Traced[Error](raise: TracedRaise, original: Error) extends Exception
 
   /** A strategy that allows to trace an error and return it. The [[trace]] method represent the
     * behavior to trace the error. As a strategy, it should be used as a `given` instance. Use the
